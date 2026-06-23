@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora Crepe</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:#0b5d59;
+    color:white;
+    overflow-x:hidden;
+}
+
+/* === ESTILOS DEL CARRUSEL SIMPLIFICADO === */
+.anuncios-container {
+    max-width: 1100px;
+    margin: 20px auto 35px auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 3px solid #d4af37;
+    box-shadow: 0px 8px 30px rgba(0,0,0,0.6);
+    background: #053633;
+    aspect-ratio: 16 / 9 !important;  
+    cursor: pointer; /* Indica que se puede cliquear/puyar */
+}
+
+.anuncios-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.anuncio-slide {
+    min-width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.anuncio-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Muestra la foto entera sin recortar absolutamente nada */
+    background-color: #053633; /* Fondo verde oscuro de Aurora para rellenar espacios libres */
+    display: block;
+}
+
+/* Indicadores de puntos abajo */
+.anuncios-dots {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px 12px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #d4af37;
+    transform: scale(1.3);
+    box-shadow: 0 0 8px #d4af37;
+}
+
+/* === VISOR A PANTALLA COMPLETA (MODAL FOTO) === */
+.visor-foto-modal {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    z-index: 99999 !important; /* Por encima de TODO */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95); /* Fondo negro profundo */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer; /* Al puyar cualquier parte regresa */
+}
+
+.visor-foto-contenido {
+    max-width: 90%;
+    max-height: 85%;
+    border-radius: 10px;
+    border: 2px solid #d4af37;
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+    object-fit: contain;
+    animation: zoomEfecto 0.25s ease-out;
+}
+
+@keyframes zoomEfecto {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ENCABEZADO Y PERFIL */
+header{
+    text-align:center;
+    padding:60px 20px 30px; 
+    position: relative;
+}
+
+.logo{
+    width:220px;
+    border-radius:20px;
+    box-shadow:0px 8px 20px rgba(0,0,0,0.4);
+    animation:flotar 3s ease-in-out infinite;
+}
+
+.logo-app {
+    width: 120px;          
+    height: 120px;         
+    object-fit: contain;   
+    border-radius: 50%;    
+    margin-bottom: 15px;   
+    display: block;        
+    margin-left: auto;     
+    margin-right: auto;    
+}
+
+@keyframes flotar{
+    0%{transform:translateY(0px);}
+    50%{transform:translateY(-10px);}
+    100%{transform:translateY(0px);}
+}
+
+h1{
+    margin-top:20px;
+    font-size:48px;
+    color:#d4af37;
+}
+
+.subtitulo{
+    margin-top:10px;
+    color:#f5deb3;
+    font-size:20px;
+}
+
+/* Botón Flotante del Carrito Fijo Superior Derecho */
+.cart-header-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f5e6c8;
+    color: #0b5d59;
+    padding: 12px 22px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid #d4af37;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.cart-header-btn:hover {
+    transform: scale(1.05);
+    background: #ffffff;
+}
+
+.cart-count {
+    background: #e74c3c;
+    color: white;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+/* Animación de golpe/burbuja al recibir un producto */
+@keyframes popCarrito {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.animar-carrito {
+    animation: popCarrito 0.3s ease-in-out;
+}
+
+/* Partícula flotante que vuela al carrito */
+.flying-particle {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    background: #d4af37;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);
+    z-index: 9999;
+    pointer-events: none;
+    transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* BOTONES PRINCIPALES */
+.botones{
+    margin-top:25px;
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+button{
+    padding:14px 30px;
+    border:none;
+    border-radius:30px;
+    cursor:pointer;
+    font-size:17px;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.btn1{
+    background:#d4af37;
+    color:black;
+}
+
+.btn2{
+    background:white;
+    color:#0b5d59;
+}
+
+button:hover{
+    transform:scale(1.04);
+    background:#f5deb3;
+    box-shadow:0px 0px 15px rgba(212,175,55,0.4);
+}
+
+/* INTERFAZ MODAL INICIO DE SESIÓN MODERNO */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: #ffffff;
+    color: #222;
+    padding: 35px 25px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 420px;
+    position: relative;
+    box-shadow: 0px 15px 35px rgba(0,0,0,0.3);
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #cc3333;
+}
+
+.modal-content h2 {
+    margin-bottom: 5px;
+    color: #0b5d59;
+    font-size: 26px;
+}
+
+.modal-content p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #0b5d59; /* Color verde elegante original */
+    margin-bottom: 8px;
+    margin-left: 4px;
+}
+
+.cart-sidebar input, .cart-sidebar textarea, .cart-sidebar select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #f9f9f9;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.cart-sidebar input:focus, .cart-sidebar textarea:focus, .cart-sidebar select:focus {
+    border-color: #0b5d59;
+    background: #fff;
+    box-shadow: 0px 0px 8px rgba(11, 93, 89, 0.15);
+}
+
+.cart-sidebar textarea {
+    resize: none;
+    height: 90px;
+}
+
+.modal-content input, .modal-content textarea, .modal-content select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #f9f9f9;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus {
+    border-color: #0b5d59;
+    background: #fff;
+    box-shadow: 0px 0px 8px rgba(11, 93, 89, 0.15);
+}
+
+.modal-content textarea {
+    resize: none;
+    height: 80px;
+}
+
+/* BARRA DE ANUNCIOS DINÁMICA (SOLO IMÁGENES) */
+.anuncios-container {
+    max-width: 1100px;
+    margin: 20px auto 35px auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 2px solid #d4af37;
+    box-shadow: 0px 8px 25px rgba(0,0,0,0.5);
+    aspect-ratio: 16 / 6; /* Relación de aspecto ideal horizontal */
+    background: #053633;
+}
+
+.anuncios-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.anuncio-slide {
+    min-width: 100%;
+    height: 100%;
+}
+
+.anuncio-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajusta la imagen perfectamente al contenedor sin deformarla */
+    display: block;
+}
+
+/* Indicadores de bolitas abajo al centro */
+.anuncios-dots {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.4); /* Fondo oscuro sutil para que siempre resalten */
+    padding: 6px 12px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #d4af37;
+    transform: scale(1.2);
+}
+
+@media(max-width: 768px) {
+    .anuncios-container {
+        max-width: 90%;
+        aspect-ratio: 16 / 9; /* Formato más cómodo para pantallas de celulares */
+    }
+}
+
+/* NUEVA INTERFAZ: VENTANA EMERGENTE LATERAL DEL CARRITO (SIDEBAR) */
+.cart-sidebar {
+    position: fixed;
+    top: 0;
+    right: -450px; /* Escondido por defecto */
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    background: #ffffff;
+    color: #222222;
+    box-shadow: -10px 0px 30px rgba(0,0,0,0.4);
+    z-index: 2000;
+    transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-sidebar.active {
+    right: 0;
+}
+
+/* Fondo oscuro cuando el carrito lateral esté abierto */
+.cart-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1999;
+}
+
+.cart-sidebar-overlay.active {
+    display: block;
+}
+
+.cart-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #eeeeee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0b5d59;
+    color: white;
+}
+
+.cart-sidebar-header h2 {
+    font-size: 20px;
+    color: #d4af37;
+}
+
+.cart-sidebar-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: white;
+    transition: color 0.2s;
+}
+
+.cart-sidebar-close:hover {
+    color: #e74c3c;
+}
+
+.cart-sidebar-content {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* Secciones de pantallas dentro del carrito */
+.cart-screen {
+    display: none;
+}
+
+.cart-screen.active {
+    display: block;
+}
+
+.cart-sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #eeeeee;
+    background: #f9f9f9;
+}
+
+/* CATEGORÍAS EN EL MENÚ */
+.categorias{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    flex-wrap:wrap;
+    margin-bottom:35px;
+}
+
+.categorias button{
+    background:#d4af37;
+    color:black;
+}
+
+/* SECCIONES */
+.seccion{
+    padding:40px 20px;
+}
+
+.titulo{
+    text-align:center;
+    font-size:35px;
+    margin-bottom:30px;
+    color:#f5deb3;
+}
+
+/* MENÚ GRID */
+.menu{
+    animation:aparecer 0.5s ease;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:25px;
+}
+
+@keyframes aparecer { from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0px); } }
+
+/* CARDS */
+.card{
+    background:#f5e6c8;
+    color:#222;
+    padding:0 0 20px 0;
+    border-radius:25px;
+    box-shadow:0px 10px 20px rgba(0,0,0,0.3);
+    transition:0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.card h2, .card p, .card .precio, .card .nota-card, .card .btn-agregar {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.card h2{ margin-top:15px; color:#0b5d59; }
+.card p{ margin-top:10px; font-size: 14px; line-height: 1.4; flex-grow: 1; }
+.precio{ display:block; margin-top:15px; font-size:22px; font-weight:bold; color:#b8860b; }
+.nota-card { display: block; margin-top: 8px; font-size: 12px; font-style: italic; color: #555; }
+.btn-agregar { margin-top: 15px; padding: 10px 20px; background: #0b5d59; color: white; font-size: 14px; border-radius: 20px; width: calc(100% - 40px); margin-left: 20px; margin-right: 20px; }
+.btn-agregar:hover { background: #d4af37; color: black; }
+
+.img-producto {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-bottom: 2px solid rgba(11, 93, 89, 0.1);
+}
+
+/* ESTILOS DE ELEMENTOS DENTRO DEL CARRITO */
+.item-carrito { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 0; 
+    border-bottom: 1px solid rgba(0,0,0,0.08); 
+}
+.info-item h4 { color: #0b5d59; font-size: 15px; margin-bottom: 2px; }
+.info-item span { font-size: 13px; color: #666; }
+.controles-item { display: flex; align-items: center; gap: 6px; }
+.btn-control { padding: 4px 8px; font-size: 13px; border-radius: 6px; background: #0b5d59; color: white; }
+.btn-control.eliminar { background: #cc3333; }
+.btn-control:hover { background: #d4af37; color: black; transform: none; box-shadow: none; }
+
+.total-carrito {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: right;
+    color: #b8860b;
+    padding-top: 5px;
+    margin-bottom: 10px;
+}
+
+/* === ESTILOS SECCIÓN REDES SOCIALES === */
+.redes-sociales {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Espacio entre cada ícono */
+    margin: 25px auto;
+    padding: 10px;
+}
+
+.redes-sociales a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column; /* Evita que el SVG se deforme a lo alto */
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Hace el fondo completamente circular */
+    border: 2px solid #d4af37; /* Borde dorado emblemático */
+    color: #d4af37; /* El ícono se pinta dorado */
+    font-size: 24px; /* Tamaño del ícono */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    background: rgba(5, 54, 51, 0.4); /* Fondo verde traslúcido */
+}
+
+.redes-sociales a svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+/* Efecto visual cuando pasas el mouse o los puyas */
+.redes-sociales a:hover {
+    transform: scale(1.15); /* Crece un poquito */
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+
+/* Colores de marca opcionales al presionar/pasar el mouse (Hover) */
+.redes-sociales a.fb:hover { color: #1877F2; border-color: #1877F2; } /* Azul Facebook */
+.redes-sociales a.ws:hover { color: #25D366; border-color: #25D366; } /* Verde WhatsApp */
+.redes-sociales a.ig:hover { color: #E1306C; border-color: #E1306C; } /* Rosado Instagram */
+.redes-sociales a.tk:hover { color: #00f2fe; border-color: #fe0979; } /* Color TikTok */
+
+/* Estilo para el botón de mapa */
+.redes-sociales a.mapa {
+    background: rgba(5, 54, 51, 0.4); 
+    border-color: #d4af37;
+    color: #d4af37;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.redes-sociales a.mapa:hover {
+    background: #d4af37;
+    color: #0b5d59;
+    transform: scale(1.15);
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+    h1{font-size:36px;}
+    .titulo{font-size:28px;}
+    .logo{width:170px;}
+    button{width:90%;}
+    .redes-link { width: 80%; justify-content: center; }
+    .cart-header-btn { position: fixed; top: 15px; right: 15px; padding: 10px 16px; font-size: 13px; }
+    header { padding-top: 40px; }
+    .btn-agregar { width: calc(100% - 40px); }
+    .cart-sidebar { max-width: 100%; right: -100%; }
+}
+
+:root {
+  --primary-color: #0b5d59; /* Verde original de Aurora Crepe */
+  --accent-color: #d4af37;  /* Dorado */
+  --bg-card: #ffffff;
+}
+
+.builder-section {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.builder-title {
+  text-align: center;
+  color: #f5deb3; /* Dorado claro como tus títulos principales */
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  font-weight: 700;
+}
+
+.builder-container {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 30px;
+  align-items: stretch; 
+  margin-top: 20px;   
+}
+
+@media (max-width: 768px) {
+  .builder-container { grid-template-columns: 1fr; }
+}
+
+.preview-column {
+  background: var(--bg-card); 
+  border-radius: 20px;        
+  padding: 45px 30px 30px 30px; /* Mismo espacio interno exacto que los pasos */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;    /* Centra el contenido verticalmente para que luzca ordenado */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
+  border: 1px solid rgba(214, 175, 55, 0.2); 
+  
+  /* AJUSTE DE DIMENSIONES */
+  width: 100%;                /* Ocupa todo el ancho asignado a su columna */
+  height: 100%;               /* Se estira para igualar la altura de las tarjetas de los pasos */
+  box-sizing: border-box;     /* Asegura que el padding no altere las dimensiones finales */
+}
+
+.crepe-preview-box {
+  width: 200px;
+  height: 200px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 4px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.crepe-visual {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.crepe-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.price-display {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #b8860b;
+  margin-bottom: 20px;
+}
+
+.btn-add-cart {
+  background: var(--accent-color);
+  color: black;
+  border: none;
+  padding: 15px 35px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-add-cart:hover {
+  transform: scale(1.05);
+  background: #f5deb3;
+  box-shadow: 0px 0px 15px rgba(212,175,55,0.5);
+}
+
+.options-column {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0; 
+  max-height: 75vh;
+  overflow-y: auto;
+  padding-right: 10px;
+  padding-top: 15px; 
+}
+
+.options-column::-webkit-scrollbar { width: 6px; }
+.options-column::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+
+/* TARJETAS DE LOS PASOS CON MAYOR DISTANCIAMIENTO */
+/* VENTANAS DE LOS PASOS CON DISTANCIAMIENTO */
+.step-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 35px 30px 30px 30px; /* Añadimos un poco más de espacio arriba para el botoncito */
+  margin-bottom: 35px;         /* Mantiene la separación limpia entre ventanas */
+  position: relative;          /* Permite posicionar el botoncito en la esquina */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
+  border: 1px solid rgba(214, 175, 55, 0.2); 
+}
+
+.step-card:last-child {
+  margin-bottom: 10px;
+}
+
+/* EL BOTONCITO DEL PASO (Regresado y estilizado) */
+.step-badge {
+  position: absolute;
+  top: -12px;                  /* Lo posiciona flotando en el borde superior */
+  left: 20px;
+  background: var(--accent-color); /* Color dorado */
+  color: #000000;              /* Texto negro para contraste */
+  padding: 5px 16px;           /* Simula la forma de óvalo/botoncito */
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  z-index: 10;                 /* Asegura que siempre sea visible */
+}
+
+/* Espaciado de los títulos con respecto al botoncito */
+.step-card h3 {
+  margin-top: 20px;            /* Espacio para que no choque con el botoncito */
+  margin-bottom: 25px;         
+  color: var(--primary-color);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Espaciado para los subtítulos internos (como Premium o Dedicatoria) */
+.sub-step-title {
+  margin: 35px 0 20px 0;       /* Mayor distancia con las opciones de arriba */
+  color: #b8860b;
+  font-size: 1.1rem;
+  border-top: 1px dashed #ddd;
+  padding-top: 25px;           /* Más espacio libre después de la línea divisoria */
+}
+
+/* Ajuste de separación interna para la rejilla de los ingredientes */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px;                   /* Más separación entre cada botón de ingrediente */
+}
+
+/* 1. OPCIONES CON TEXTO NEGRO POR DEFECTO */
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f5e6c8; /* Color crema similar a tus productos */
+  border: 1px solid #d4af37;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #000000; /* Letras negras */
+  font-weight: 500;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.option-item:hover {
+  background: #ebe0b5;
+}
+
+/* 1. SELECCIONADO: TEXTO BLANCO Y RELLENO VERDE DE LA APP */
+.option-item:has(input:checked) {
+  background: var(--primary-color) !important; 
+  color: #ffffff !important; 
+  border-color: var(--accent-color);
+}
+
+/* CLASE DE LA CREPA QUE LOGRA EL VUELO */
+.fly-to-cart {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: none;
+  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: scale(0.15) rotate(360deg);
+  opacity: 0.3;
+}
+
+.selector-sabor {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+.select-menu {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+}
+
+.select-menu:focus {
+    border-color: #cbb279; /* Un tono dorado/crema similar al de tu marca */
+}
+
+</style>
+
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+
+<button class="cart-header-btn" id="cartHeaderBtn" onclick="abrirCarritoLateral()">
+    🛒 Mi Carrito <span class="cart-count" id="cartGlobalCount">0</span>
+</button>
+
+<div class="cart-sidebar-overlay" id="cartOverlay" onclick="cerrarCarritoLateral()"></div>
+
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-sidebar-header">
+        <h2>🛒 Mi Pedido</h2>
+        <span class="cart-sidebar-close" onclick="cerrarCarritoLateral()">✕</span>
+    </div>
+    
+    <div class="cart-sidebar-content">
+        <div class="cart-screen active" id="pantalla-productos">
+            <div id="lista-carrito">
+                </div>
+        </div>
+
+        <div class="cart-screen" id="pantalla-formulario" style="padding: 10px 5px;">
+    <p style="font-size: 15px; color: #333; margin-bottom: 25px; font-weight: bold; text-align: center;">
+        📋 Ingresa tus datos de envío
+    </p>
+    
+    <div class="input-group">
+        <label>Nombre Completo</label>
+        <input type="text" id="cartNombre">
+    </div>
+    
+    <div class="input-group">
+        <label>Número de Teléfono</label>
+        <input type="tel" id="cartTelefono">
+    </div>
+    
+    <div class="input-group">
+    <label>Dirección Completa de Entrega</label>
+    <textarea id="cartDireccion" placeholder="Ciudad, colonia, pasaje, casa #..."></textarea>
+    <button type="button" onclick="obtenerUbicacion(this)" style="margin-top: 8px; padding: 10px 14px; font-size: 13px; background: #0b5d59; color: white; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center; font-weight: bold; transition: background 0.3s;">
+        📍 Compartir ubicación exacta (GPS)
+    </button>
+    <span id="locationStatus" style="font-size: 12px; display: block; margin-top: 6px; text-align: center; font-weight: 500;"></span>
+    </div>
+    
+    <div class="input-group">
+        <label>Método de Pago</label>
+        <select id="metodoPago">
+            <option value="">Selecciona Método de Pago</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia Bancaria</option>
+        </select>
+    </div>
+</div>
+    </div>
+    
+    <div class="cart-sidebar-footer">
+        <div class="total-carrito">
+            Total: $<span id="cartTotal">0.00</span>
+        </div>
+        
+        <div id="wrapper-botones-carrito">
+            <button class="btn1" id="btnAccionCarrito" style="width: 100%; padding: 14px; border-radius: 12px;" onclick="avanzarFormularioPedido()">
+                Proceder al Pago ➔
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalPerfil">
+    <div class="modal-content">
+        <span class="close-btn" onclick="cerrarModalPerfil()">✕</span>
+        <h2>👤 Mi Perfil</h2>
+        <p>Inicia sesión guardando tus datos para tus pedidos</p>
+        
+        <div class="input-group">
+            <label>Nombres y Apellidos</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="perfilNombres" placeholder="Nombres">
+                <input type="text" id="perfilApellidos" placeholder="Apellidos">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Correo Electrónico</label>
+            <input type="email" id="perfilEmail" placeholder="usuario@gmail.com">
+        </div>
+
+        <div class="input-group">
+            <label>Número de Teléfono</label>
+            <input type="tel" id="perfilTelefono" placeholder="Ej: 7000 0000">
+        </div>
+
+        <div class="input-group">
+            <label>Dirección Completa de Entrega</label>
+            <textarea id="perfilDireccion" placeholder="Ciudad, colonia, pasaje, número de casa, etc."></textarea>
+        </div>
+        
+        <button class="btn1" style="width:100%; margin-top:10px; border-radius:12px; padding:14px;" onclick="guardarPerfil()">Guardar e Iniciar Sesión</button>
+    </div>
+</div>
+
+<header>
+    <img src="auroralogobg.png" alt="Logo Aurora Crepe" class="logo-app">
+    <h1>Aurora Crepe</h1>
+    <p class="slogan"> Creperia al estilo Parisino 🗼</p>
+</header>
+
+<div class="anuncios-container" id="anunciosContainer">
+    <div class="anuncios-track" id="anunciosTrack">
+        <div class="anuncio-slide">
+            <img src="https://lh3.googleusercontent.com/d/1fxiaVS5FT3KQgrdh5BN56_YSRJ68RHBZ" alt="Anuncio 1">
+        </div>
+        <div class="anuncio-slide">
+            <img src="https://lh3.googleusercontent.com/d/1VzoC0LzwEcLU8Btup3B79JnjVgXJLP6N" alt="Anuncio 2">
+        </div>
+    </div>
+    <div class="anuncios-dots" id="anunciosDots"></div>
+</div>
+
+<div id="visorFotoModal" class="visor-foto-modal">
+    <img id="fotoEnGrande" class="visor-foto-contenido" src="" alt="Vista ampliada">
+</div>
+
+<div id="visorFotoModal" class="visor-foto-modal">
+    <img id="fotoEnGrande" class="visor-foto-contenido" src="" alt="Vista ampliada">
+</div>
+
+<!-- CONTENEDOR PRINCIPAL: ARMA TU CREPA -->
+
+<section class="builder-section">
+  <h2 class="builder-title">Arma tu crepa</h2>
+  
+  <div class="builder-container">
+    
+    <div class="preview-column">
+      <div class="crepe-preview-box">
+        <div class="crepe-visual" id="crepeVisual">
+          <img src="https://lh3.googleusercontent.com/d/1WZ_aprp1mEYrIwqNaL1A1lU8GygLJyTo" alt="Crepa" id="crepeImg">
+        </div>
+      </div>
+      <div class="price-display">
+        Total: <span id="totalPrice">$3.00</span>
+      </div>
+      <button class="btn-add-cart" id="btnAddToCart" onclick="animateToCart()">
+        <span>¡Terminar y agregar!</span>
+        <i class="fas fa-shopping-cart"></i>
+      </button>
+    </div>
+
+    <div class="options-column">
+      <form id="crepeForm">
+        
+        <div class="step-card">
+          <div class="step-badge">Paso 1</div>
+          <h3>Elije base dulce ($3.00)</h3>
+          <div class="options-grid">
+            <label class="option-item"><input type="radio" name="base" value="Nutella" data-price="3.00" checked> Nutella</label>
+            <label class="option-item"><input type="radio" name="base" value="Dulce de leche" data-price="3.00"> Dulce de leche</label>
+            <label class="option-item"><input type="radio" name="base" value="Leche condensada" data-price="3.00"> Leche condensada</label>
+            <label class="option-item"><input type="radio" name="base" value="Hershey's" data-price="3.00"> Hershey's</label>
+            <label class="option-item"><input type="radio" name="base" value="Mantequilla de maní" data-price="3.00"> Mantequilla de maní</label>
+            <label class="option-item"><input type="radio" name="base" value="Mermelada de fresa" data-price="3.00"> Mermelada de fresa</label>
+            <label class="option-item"><input type="radio" name="base" value="Miel de abeja" data-price="3.00"> Miel de abeja</label>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">Paso 2</div>
+          <h3>Elije fruta o topping ($0.75 c/u)</h3>
+          <div class="options-grid">
+            <label class="option-item"><input type="checkbox" name="toppings" value="Fresa" data-price="0.75"> Fresa</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Banano" data-price="0.75"> Banano</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Coco" data-price="0.75"> Coco</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Piña" data-price="0.75"> Piña</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Maní" data-price="0.75"> Maní</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Oreo" data-price="0.75"> Oreo</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Almendra" data-price="0.75"> Almendra</label>
+          </div>
+
+          <h4 class="sub-step-title">Premium ($0.99 c/u)</h4>
+          <div class="options-grid">
+            <label class="option-item"><input type="checkbox" name="toppings" value="Kiwi" data-price="0.99"> Kiwi</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Melocotón" data-price="0.99"> Melocotón</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="M&M" data-price="0.99"> M&M</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Marshmallows" data-price="0.99"> Marshmallows</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Chispas de chocolate blanco" data-price="0.99"> Chispas Bl.</label>
+            <label class="option-item"><input type="checkbox" name="toppings" value="Chispas de chocolate negro" data-price="0.99"> Chispas Ng.</label>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">Paso 3</div>
+          <h3>Tipo de masa</h3>
+          <div class="options-grid">
+            <label class="option-item"><input type="radio" name="masa" value="Clásica" data-price="0.00" checked onchange="changeMasaVisual('clasica')"> Masa Clásica (+$0.00)</label>
+            <label class="option-item"><input type="radio" name="masa" value="Masa canela" data-price="0.25" onchange="changeMasaVisual('canela')"> Masa Canela (+$0.25)</label>
+            <label class="option-item"><input type="radio" name="masa" value="Masa chocolatada" data-price="0.25" onchange="changeMasaVisual('chocolate')"> Masa Chocolatada (+$0.25)</label>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">Extras</div>
+          <h3>Ingredientes adicionales ($0.99 c/u)</h3>
+          <div class="options-grid">
+            <label class="option-item"><input type="checkbox" name="extras" value="Helado de vainilla" data-price="0.99"> Helado de vainilla</label>
+            <label class="option-item"><input type="checkbox" name="extras" value="Crema batida" data-price="0.99"> Crema batida</label>
+          </div>
+
+          <h4 class="sub-step-title">Agregar dedicatoria</h4>
+          <div class="options-grid" style="margin-bottom: 15px;">
+            <label class="option-item">
+              <input type="radio" name="dedicatoria_opcion" value="no" checked onchange="toggleDedicatoriaBox(false)"> No agregar
+            </label>
+            <label class="option-item">
+              <input type="radio" name="dedicatoria_opcion" value="si" data-price="1.50" onchange="toggleDedicatoriaBox(true)"> Sí, agregar (+$1.50)
+            </label>
+          </div>
+          
+          <div id="dedicatoriaContainer" style="display: none; transition: all 0.3s ease;">
+            <textarea id="textoDedicatoria" placeholder="Escribe aquí tu dedicatoria personalizada..." style="width:100%; height:80px; padding:10px; border-radius:10px; border:1px solid #ddd; color:#222; font-size:14px; outline:none; resize:none;"></textarea>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</section>
+
+    <!-- MENÚ PRINCIPAL -->
+
+<section class="seccion" id="seccion-menu">
+    <h2 class="titulo">Nuestro Menú</h2>
+
+    <div class="categorias">
+        <button onclick="mostrarCategoria('crepas-dulces')">Crepas Dulces</button>
+        <button onclick="mostrarCategoria('crepas-saladas')">Crepas Saladas</button>
+        <button onclick="mostrarCategoria('paninis')">Paninis</button>
+        <button onclick="mostrarCategoria('hamburguesas')">Hamburguesas</button>
+        <button onclick="mostrarCategoria('entradas-dulces')">Entradas Dulces</button>
+        <button onclick="mostrarCategoria('entradas-saladas')">Entradas Saladas</button>
+        <button onclick="mostrarCategoria('bebidas-calientes')">Bebidas Calientes</button>
+        <button onclick="mostrarCategoria('bebidas-frias')">Bebidas Frías</button>
+    </div>
+
+    <div class="categoria-menu" id="crepas-dulces">
+        <h3 class="titulo">Crepas Dulces</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/12RtrjK-KWjVU0UoFDKzztcVTqgfXl0cW" alt="Chocolata" class="img-producto"><h2>Chocolata</h2><p>Masa chocolatada, nutella, fresas y chispas de chocolate.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Chocolata', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1hk_KbBAKmeQxUXAobMIHkDq7TZe9DmJW" alt="Cookies & Cream" class="img-producto"><h2>Cookies & Cream</h2><p>Nutella, chispas de chocolate blanco, oreo y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Cookies & Cream', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1RFVbxZaA_4y9PWzSwLUvHc2aUc2iJ3Pt" alt="Tropical" class="img-producto"><h2>Tropical</h2><p>Nutella, fresas, banano y coco.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Tropical', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1CJXPJkG5FjUnl06jtT6F8wkSP8tn6Jvd" alt="Arcoiris Crepe" class="img-producto"><h2>Arcoiris Crepe</h2><p>Nutella, fresas y marshmallows.</p><span class="precio">$4.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Arcoiris Crepe', 4.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1tE-NyyfPp8Pu6E1mNgcKI9m666NE91Bz" alt="Cheese Crepe" class="img-producto"><h2>Cheese Crepe</h2><p>Queso crema, fresas y caramelo.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Cheese Crepe', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1ksf6xHLdcDidB6uRlMm81VkQd6QbkAZd" alt="Kiwi Crepe" class="img-producto"><h2>Kiwi Crepe</h2><p>Kiwi, nutella y fresa.</p><span class="precio">$4.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Kiwi Crepe', 4.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Condensada" class="img-producto"><h2>Condensada</h2><p>Leche condensada, coco y melocotón.</p><span class="precio">$4.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Condensada', 4.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Miel de Abeja" class="img-producto"><h2>Miel de Abeja</h2><p>Miel, almendra y helado.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Miel de Abeja', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Dulce de Leche" class="img-producto"><h2>Dulce de Leche</h2><p>Queso crema, banano, dulce de leche y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Dulce de Leche', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Pie de Manzana" class="img-producto"><h2>Pie de Manzana</h2><p>Manzana caramelizada y crema batida.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Pie de Manzana', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1BaGfsJx43JgHl0QBSmw3Mtb-fnHkEs5Q" alt="Snicker Banano" class="img-producto"><h2>Snicker Banano</h2><p>Nutella, caramelo, banano y maní.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Snicker Banano', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/17GKkEndO9crN-WHri9RfUqu9JyXsNmxB" alt="Fresa Oreo" class="img-producto"><h2>Fresa Oreo</h2><p>Nutella, fresa y oreo.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Fresa Oreo', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1dadVSFj3Ba8DnWMsnpO-lBkk7BIWHPzL" alt="Volcán de Fresa" class="img-producto"><h2>Volcán de Fresa</h2><p>Nutella, jalea de fresa y helado.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Volcán de Fresa', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/10xWA9uP3yitWQKk8x-w_i__WF70qldko" alt="Ferrero" class="img-producto"><h2>Ferrero</h2><p>Nutella, maní y chocolate ferrero.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Ferrero', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/18-JC-6YQnZHiQXsOHoiFSmQQz7gS2Qan" alt="Mantequilla de Maní Banano" class="img-producto"><h2>Mantequilla de Maní Banano</h2><p>Mantequilla de maní y banano.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Mantequilla de Maní Banano', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/13LsqM2LNux4-g1BEy_6nhtGYxbPasTry" alt="Tutti Frutti" class="img-producto"><h2>Tutti Frutti</h2><p>Queso crema, tutti frutti, leche condensada y helado.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Tutti Frutti', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1xWw7_Ey3CnI1J8NHwziCtGu9eF0fri4L" alt="Caprichito" class="img-producto"><h2>Caprichito</h2><p>Melocotón, jalea de fresa, helado y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Caprichito', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1sL1Mh1tFpFwVm-cMLxJSro9TonKL_M0h" alt="Brownie" class="img-producto"><h2>Brownie</h2><p>Hershey, brownie, helado y chispas de chocolate blanco.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Brownie', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/17BkkpY6F_ffx85xBm1vt0Tiz6kmSM5s4" alt="Crepa de Café" class="img-producto"><h2>Crepa de Café</h2><p>Masa sabor café, manzana en almíbar y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Crepa de Café', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Choco Chips" class="img-producto"><h2>Choco Chips</h2><p>Hershey's, galleta chocochips, helado y chispas de chocolate negro.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Choco Chips', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/17Uhji16NJ0lYMSUyordmnYP3DvkA1zxI" alt="Piña Colada" class="img-producto"><h2>Piña Colada</h2><p>Leche condensada, piña, coco y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Piña Colada', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Tentación" class="img-producto"><h2>Tentación</h2><p>Nutella, fresas, melocotón y almendras.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Tentación', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/19milZtpTDQdsqPXeYmvCUaAmK4YSWp_Q" alt="Pistacho Crepe" class="img-producto"><h2>Pistacho Crepe</h2><p>Nutella, crema de pistacho puro, coco dorado y semillas de pistacho.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Pistacho Crepe', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1kiweQ1SyIMclNzs8jSrWihGmHhW_oqNq" alt="Cardenal de Fresa" class="img-producto"><h2>Cardenal de Fresa</h2><p>Jalea de fresa, fresas, espumillas y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Cardenal de Fresa', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Cardenal de Melocotón" class="img-producto"><h2>Cardenal de Melocotón</h2><p>Caramelo, melocotón, espumilla y crema batida.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Cardenal de Melocotón', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Explosión de Sabor" class="img-producto"><h2>Explosión de Sabor</h2><p>Nutella, fresa, banano, melocotón, almendra, kiwi y helado.</p><span class="precio">$7.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Explosión de Sabor', 7.50, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="crepas-saladas" style="display:none;">
+        <h3 class="titulo">Crepas Saladas</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1xEPAHX61g0zxiUZROvXYPFwJRWZLOIta" alt="Pizza Crepe" class="img-producto"><h2>Pizza Crepe</h2><p>Mozzarella, jamón, chile, cebolla y salsa de tomate.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Pizza Crepe', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1q88ifYUz7w-N7PVEUwKEfWCAYpg2WQfo" alt="Teriyaky" class="img-producto"><h2>Teriyaky</h2><p>Pollo con vegetales en salsa teriyaky.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Teriyaky', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/18HSPZ3IangmfYEQdHvIljC-7kFtn2xPM" alt="Cordon Bleu" class="img-producto"><h2>Cordon Bleu</h2><p>Mozzarella, pollo, champiñones y salsa blanca.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Cordon Bleu', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Jamón de Pavo" class="img-producto"><h2>Jamón de Pavo</h2><p>Mozzarella, jamón y ranch.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Jamón de Pavo', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Tres Quesos" class="img-producto"><h2>Tres Quesos</h2><p>Mozzarella, cheddar y parmesano.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Tres Quesos', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1u7GVNBob7obu7bAaRPzYqqUVJ_86dISD" alt="Champiñones" class="img-producto"><h2>Champiñones</h2><p>Mozzarella, champiñones y salsa de la casa.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Champiñones', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Hawaiana" class="img-producto"><h2>Hawaiana</h2><p>Mozzarella, jamón y piña.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Hawaiana', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Margarita" class="img-producto"><h2>Margarita</h2><p>Mozzarella, tomate y albahaca seca.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Margarita', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Margarita Pesto" class="img-producto"><h2>Margarita Pesto</h2><p>Mozzarella, tomate y pesto.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Margarita Pesto', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1qU1cLcgJoTCGc_OiqJWYzzBKncwmd410" alt="Gran Cesar" class="img-producto"><h2>Gran Cesar</h2><p>Mozzarella, pollo, tomate, lechuga y aderezo César.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Gran Cesar', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Parissiene" class="img-producto"><h2>Parissiene</h2><p>Mozzarella, jamón, cheddar, lechuga y tomate.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Parissiene', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Camarones" class="img-producto"><h2>Camarones</h2><p>Mozzarella y camarones en salsa de cilantro.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Camarones', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Pollo Pesto" class="img-producto"><h2>Pollo Pesto</h2><p>Mozzarella, pollo y pesto.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Pollo Pesto', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1eBYQKbfuSiDf9SR_psQy1ez0XRx-H-R_" alt="Al Chipotle" class="img-producto"><h2>Al Chipotle</h2><p>Mozzarella, pollo, tomate y salsa chipotle.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Al Chipotle', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/PON_AQUÍ_EL_ID_DE_DRIVE" alt="Pollo Espinaca" class="img-producto"><h2>Pollo Espinaca</h2><p>Mozzarella, pollo y espinaca.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Pollo Espinaca', 4.99, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="paninis" style="display:none;">
+        <h3 class="titulo">Paninis y Hot Dogs</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1Jt7XaVSuapQduWCJRJTBq9GTg_2DCDk1" alt="Chicken Ranch" class="img-producto"><h2>Chicken Ranch</h2><p>Mozzarella, pollo, lechuga, tomate y aderezo ranch.</p><span class="precio">$4.99</span><span class="nota-card">Agrega papas francesas por $2.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Chicken Ranch', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1fP4YRi8DG76-S4tGVABO0TEMUg4Br0Di" alt="Jamón Club" class="img-producto"><h2>Jamón Club</h2><p>Mozzarella, jamón, tocino, tomate y aderezo ranch.</p><span class="precio">$4.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Jamón Club', 4.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1abiKkOEWFey85SxJHsxAbndNFJp0-314" alt="Full Cheese" class="img-producto"><h2>Full Cheese</h2><p>Mozzarella, cheddar y parmesano.</p><span class="precio">$4.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Full Cheese', 4.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/13q_cgAnfXpuu1cxCcG1bia-9Dw446GtH" alt="Tradicional" class="img-producto"><h2>Tradicional</h2><p>Cheddar, jamón, lechuga, tomate y aderezo de la casa.</p><span class="precio">$4.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Tradicional', 4.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1VeYfweJTAG84jsKWNEvPmkXYtAdAjIjS" alt="Texas BBQ" class="img-producto"><h2>Texas BBQ</h2><p>Mozzarella, carne de res, cebolla caramelizada y salsa BBQ.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Texas BBQ', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Pollo Crispy" class="img-producto"><h2>Pollo Crispy</h2><p>Mozzarella, pollo crispy, cebolla caramelizada y salsa BBQ.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Pollo Crispy', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Tropical" class="img-producto"><h2>Tropical</h2><p>Mozzarella, carne de res, piña y cebolla caramelizada.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Tropical', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1ouu0fxaSRFIfbWjM1f-4HZbKHLB9DgdQ" alt="Argentino" class="img-producto"><h2>Argentino</h2><p>Mozzarella, chorizo argentino y pesto.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Argentino', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1uBe4C5gXfZV_LMCiRICOtQziO8LJ0FKo" alt="Chipotle" class="img-producto"><h2>Chipotle</h2><p>Mozzarella, pollo, hongos y aderezo chipotle.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Chipotle', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1tp1LJwAM5JFfQlaW7mv2GWDmejpsFKv2" alt="Atún" class="img-producto"><h2>Atún</h2><p>Mayonesa, atún, lechuga y tomate.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini Atún', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Hotdog" class="img-producto"><h2>Hotdog</h2><p>Hotdog sencillo</p><span class="precio">$1.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Hotdog', 1.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1F5ldFowTXlWY74t0WmSNBfo0Y-JB_jWq" alt="Combo Hotdog" class="img-producto"><h2>Combo Hotdog</h2><p>Combo hotdog con papas adicionales</p><span class="precio">$3.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Combo Hotdog', 1.50, this)">Agregar</button></div>
+        </div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="hamburguesas" style="display:none;">
+        <h3 class="titulo">Hamburguesas</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="La Doble" class="img-producto"><h2>La Doble</h2><p>Doble carne de res, doble tocino, doble cheddar, doble aro de cebolla, tomate y lechuga.</p><span class="precio">$7.99</span><span class="nota-card">Agrega papas sazonadas por $2.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa La Doble', 7.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1VljOC06qr-8z4TofnlnOB-9vYYe-TdmH" alt="Aurora Burguer" class="img-producto"><h2>Aurora Burguer</h2><p>Carne de res, tocino, cheddar, aro de cebolla, tomate y lechuga.</p><span class="precio">$4.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Aurora Burguer', 4.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1hu91YDJzzeDoDvEBWrWGJVVdm7tuCbsx" alt="Hawaiana" class="img-producto"><h2>Hawaiana</h2><p>Carne de res, mozzarella, tocino, aro de piña y cebolla caramelizada.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa Hawaiana', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Fundido" class="img-producto"><h2>Fundido</h2><p>Carne de res, cheddar y aderezo de la casa.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa Fundido', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Crispy" class="img-producto"><h2>Crispy</h2><p>Pechuga empanizada, mozzarella, lechuga y tomate.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa Crispy', 4.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Jalapeña" class="img-producto"><h2>Jalapeña</h2><p>Carne de res, mozzarella, tocino, jalapeño popper, lechuga y tomate.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa Jalapeña', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Pollo" class="img-producto"><h2>Pollo</h2><p>Torta de carne de pollo, lechuga, tomate y aderezo de la casa.</p><span class="precio">$4.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Hamburguesa de Pollo', 4.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1dvtIoJcFLnyr5he39PgUXkZD9OKwnf40" alt="Mini Auroras" class="img-producto"><h2>Mini Auroras</h2><p>4 mini hamburguesas acompañadas de papas francesas y salsa cheddar.</p><span class="precio">$9.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Mini Auroras Pack', 9.99, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="entradas-dulces" style="display:none;">
+        <h3 class="titulo">Entradas Dulces</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Copa Tutti Frutti" class="img-producto"><h2>Copa Tutti Frutti</h2><p>Base de galleta, crema y tutti frutti.</p><span class="precio">$3.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Copa Tutti Frutti', 3.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1v3pglJJOT7JW63W4rPCYKRRUD6ViGGwS" alt="Copa Brownie" class="img-producto"><h2>Copa Brownie</h2><p>Brownie, crema y helado bañado con Hershey's.</p><span class="precio">$3.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Copa Brownie', 3.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1h1VMPslo3iQ9cHTJ9gVFfbBTzSPHcWRq" alt="Copa Cardenal de Fresa" class="img-producto"><h2>Copa Cardenal de Fresa</h2><p>Espumilla, fresas frescas, crema y base de galleta.</p><span class="precio">$3.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Copa Cardenal de Fresa', 3.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Fettuccine Crepe" class="img-producto"><h2>Fettuccine Crepe</h2><p>Nuestra deliciosa crepa hecha fettuccini, nutella, fresas, chispas de chocolate y helado.</p><span class="precio">$4.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Fettuccine Crepe', 4.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1NeGGI3SkEGaB6SSsCrjaO8cyifqyMN6P" alt="Panini de Nutella" class="img-producto"><h2>Panini de Nutella</h2><p>Acompañado de fresas frescas.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Panini de Nutella', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Churros" class="img-producto"><h2>Churros</h2><p>Acompañados de helado y dulce de caramelo.</p><span class="precio">$3.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Churros con Helado', 3.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1Ev1MvFX5skUCbGKvRJjtlCdNf4ckapaa" alt="Torrejas" class="img-producto"><h2>Torrejas</h2><p>2 Torrejas tradicionales preparadas con dulce de atado.</p><span class="precio">$2.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Torrejas (2)', 2.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1JmKIYXtovunPtBkyXBYU2afg8wywExZT" alt="Tostadas Francesas" class="img-producto"><h2>Tostadas Francesas</h2><p>5 unidades acompañadas con deliciosa miel maple.</p><span class="precio">$2.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Tostadas Francesas (5)', 2.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Piña Caramelizada" class="img-producto"><h2>Piña Caramelizada</h2><p>Aro de piña caramelizada y helado de vainilla.</p><span class="precio">$2.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Piña Caramelizada', 2.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1zPTDQVUlLx4BwVppGC9k6CUrzMUyWaWr" alt="Fondu de Chocolate" class="img-producto"><h2>Fondu de Chocolate</h2><p>Chocolate fundido, Waffles, fresas, banano, marshmallow y barquillo.</p><span class="precio">$9.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Fondu de Chocolate', 9.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1Ur5T7O56rCXROp15A7l7UnpxHdhNzgWZ" alt="Waffles Fresa Banano Caramelo" class="img-producto"><h2>Waffles Fresa Banano Caramelo</h2><p>Waffles con fresa, banano y caramelo.</p><span class="precio">$4.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Waffle Fresa Banano Caramelo', 4.50, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="entradas-saladas" style="display:none;">
+        <h3 class="titulo">Entradas Saladas</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/15AOdAA0HdZ0QpL2y_FdMRRSEX8oGKHxa" alt="Aros de Cebolla" class="img-producto"><h2>Aros de Cebolla</h2><p>Crujientes aros de cebolla fritos de la casa.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Aros de Cebolla', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1ZMjvf-HoTNresKMmCMh9ITQZ4wyC3snx" alt="Dedos de Queso" class="img-producto"><h2>Dedos de Queso</h2><p>Palitos de queso mozzarella empanizados.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Dedos de Queso', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1m2gs9-JC5KI6cQp63aKfZvuaYZm1gkOL" alt="Jalapeños Popper" class="img-producto"><h2>Jalapeños Popper</h2><p>Jalapeños crujientes rellenos de queso crema suave.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Jalapeños Popper', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1WiXwXRvD0JR_Ze9PODPdfd21kUwoYUWv" alt="Papas Sazonadas" class="img-producto"><h2>Papas Sazonadas</h2><p>Papas gajo crujientes con especias seleccionadas.</p><span class="precio">$2.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Papas Sazonadas', 2.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Papas Francesas" class="img-producto"><h2>Papas Francesas</h2><p>Papas fritas tradicionales crujientes.</p><span class="precio">$2.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Papas Francesas', 2.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Salchipapas" class="img-producto"><h2>Salchipapas</h2><p>Papas fritas mezcladas con rodajas de salchicha frita.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Salchipapas', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Chillipapas" class="img-producto"><h2>Chillipapas</h2><p>Papas fritas cubiertas con abundante chilli de carne casero.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Chillipapas', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Paté de Atún" class="img-producto"><h2>Paté de Atún</h2><p>Acompañamiento untable especial de paté de atún.</p><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Paté de Atún', 3.99, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="bebidas-calientes" style="display:none;">
+        <h3 class="titulo">Bebidas Calientes</h3>
+        <div class="menu">
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Café Americano" class="img-producto"><h2>Café Americano</h2><span class="precio">$1.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Café Americano', 1.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Capuchino" class="img-producto"><h2>Capuchino</h2><span class="precio">$2.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Capuchino', 2.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Moka" class="img-producto"><h2>Moka</h2><span class="precio">$2.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Moka Caliente', 2.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Macchiato" class="img-producto"><h2>Macchiato</h2><span class="precio">$2.75</span><button class="btn-agregar" onclick="agregarAlCarrito('Macchiato', 2.75, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Chocolate con Malvaviscos" class="img-producto"><h2>Chocolate con Malvaviscos</h2><span class="precio">$1.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Chocolate con Malvaviscos', 1.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Té Chaí Caliente" class="img-producto"><h2>Té Chaí (Leche o Agua)</h2><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Té Chaí Caliente', 3.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Té de Manzanilla" class="img-producto"><h2>Té de Manzanilla</h2><span class="precio">$1.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Té de Manzanilla', 1.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Affogato" class="img-producto"><h2>Affogato</h2><p>Helado de vainilla acompañado de café.</p><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Affogato', 3.00, this)">Agregar</button></div>
+        </div>
+    </div>
+
+    <div class="categoria-menu" id="bebidas-frias" style="display:none;">
+        <h3 class="titulo">Bebidas Frías</h3>
+        <div class="menu">
+
+            <!-- FROZENS -->
+            <div class="card">
+            <img src="https://lh3.googleusercontent.com/d/" alt="Frozen Tradicional" class="img-producto">
+            <h2>Frozen</h2>
+            <p>Fresa, Sandia, Piña, Melón, Jamaica, Tamarindo.</p>
+    
+            <div class="selector-sabor">
+            <label for="sabor-frozen">Sabor:</label>
+          <select id="sabor-frozen" class="select-menu">
+            <option value="Frozen de Fresa">Fresa</option>
+            <option value="Frozen de Sandía">Sandía</option>
+            <option value="Frozen de Piña">Piña</option>
+            <option value="Frozen de Melón">Melón</option>
+            <option value="Frozen de Jamaica">Jamaica</option>
+            <option value="Frozen de Tamarindo">Tamarindo</option>
+          </select>
+        </div>
+
+            <span class="precio">$3.00</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito = this.parentElement.querySelector('select').value; agregarAlCarrito(sabor, 3.00, this)">Agregar</button>
+        </div>
+            
+            <!-- FRAPPÉS  -->
+            <div class="card">
+            <img src="https://lh3.googleusercontent.com/d/" alt="Frappe Sabores" class="img-producto">
+            <h2>Frappe</h2>
+            <p>Hershey, Caramelo, Oreo, Nutella, Snickers.</p>
+    
+        <div class="selector-sabor">
+            <label for="sabor-frappe">Sabor:</label>
+            <select id="sabor-frappe" class="select-menu">
+            <option value="Frappé Hershey">Hershey</option>
+            <option value="Frappé Caramelo">Caramelo</option>
+            <option value="Frappé Oreo">Oreo</option>
+            <option value="Frappé Nutella">Nutella</option>
+            <option value="Frappé Snickers">Snickers</option>
+          </select>
+        </div>
+
+          <span class="precio">$3.75</span>
+          <button class="btn-agregar" onclick="agregarAlCarrito = this.parentElement.querySelector('select').value; agregarAlCarrito(sabor, 3.75, this)">Agregar</button>
+        </div>
+
+            <!-- SPLASH -->
+            <div class="card">
+            <img src="https://lh3.googleusercontent.com/d/1qbMonawUp7drOJ8exY_CmIw3LfU2cmQj" alt="Splash" class="img-producto">
+            <h2>Splash</h2>
+            <p>Fresa, Melocotón, Kiwi o Mixto.</p>
+    
+        <div class="selector-sabor">
+            <label for="sabor-splash">Sabor:</label>
+            <select id="sabor-splash" class="select-menu" onchange="const precioSpan = this.parentElement.parentElement.querySelector('.precio'); const btn = this.parentElement.parentElement.querySelector('.btn-agregar'); if(this.value.includes('Mixto')){ precioSpan.textContent = '$3.00'; btn.setAttribute('onclick', 'agregarAlCarrito(\''+this.value+'\', 3.00, this)'); } else { precioSpan.textContent = '$2.50'; btn.setAttribute('onclick', 'agregarAlCarrito(\''+this.value+'\', 2.50, this)'); }">
+            <option value="Splash de Fresa">Fresa</option>
+            <option value="Splash de Melocotón">Melocotón</option>
+            <option value="Splash de Kiwi">Kiwi</option>
+            <option value="Splash Mixto">Mixto</option>
+          </select>
+        </div>
+
+            <span class="precio">$2.50</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito('Splash de Fresa', 2.50, this)">Agregar</button>
+        </div>
+            
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Limonada con Piña" class="img-producto"><h2>Limonada con Piña</h2><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Limonada con Piña', 3.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Limonada con Fresa" class="img-producto"><h2>Limonada con Fresa</h2><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Limonada con Fresa', 3.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Fresca Jamaica" class="img-producto"><h2>Jamaica</h2><span class="precio">$2.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Jamaica', 2.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Fresco de Tamarindo" class="img-producto"><h2>Tamarindo</h2><span class="precio">$2.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Tamarindo', 2.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1YDajRSaHS5iYE1o_R3AZeQdWPNTk8qhG" alt="Piña Colada" class="img-producto"><h2>Piña Colada</h2><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Piña Colada', 3.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Copa de Vino" class="img-producto"><h2>Copa de Vino</h2><span class="precio">$3.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Copa de Vino', 3.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Sangría" class="img-producto"><h2>Sangría</h2><span class="precio">$3.99</span><button class="btn-agregar" onclick="agregarAlCarrito('Sangría', 3.99, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Té Frío de Durazno" class="img-producto"><h2>Té Frío Durazno</h2><span class="precio">$2.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Té Frío Durazno', 2.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Té Frío de Limón" class="img-producto"><h2>Té Frío Limón</h2><span class="precio">$2.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Té Frío Limón', 2.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Té Chaí Frío" class="img-producto"><h2>Té Chaí Frío (Leche o Agua)</h2><span class="precio">$3.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Té Chaí Frío', 3.00, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/" alt="Dalgona Café" class="img-producto"><h2>Dalgona Café</h2><span class="precio">$3.50</span><button class="btn-agregar" onclick="agregarAlCarrito('Dalgona Café', 3.50, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1lLZZ9lKOWnH8nMfvS5eTN1PHK35a0rjm" alt="Soda" class="img-producto"><h2>Soda</h2><span class="precio">$1.25</span><button class="btn-agregar" onclick="agregarAlCarrito('Soda', 1.25, this)">Agregar</button></div>
+            <div class="card"><img src="https://lh3.googleusercontent.com/d/1Rzn4XEmTEy3bhEGPqx8W8NFM2xlf_Buo" alt="Agua Embotellada" class="img-producto"><h2>Agua</h2><span class="precio">$1.00</span><button class="btn-agregar" onclick="agregarAlCarrito('Agua', 1.00, this)">Agregar</button></div>
+        </div>
+</section>
+
+<footer>
+    
+    <div class="redes-sociales">
+    <a href="https://www.facebook.com/AuroraCrepe" target="_blank" class="fb" title="Facebook">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+    </a>
+
+    <a href="https://wa.me/50376250194" target="_blank" class="ws" title="WhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.456h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+    
+    <a href="https://instagram.com/auroracrepe" target="_blank" class="ig" title="Instagram">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 110 12.324 6.162 6.162 0 010-12.324zM12 16a4 4 0 100-8 4 4 0 000 8zm6.406-11.845a1.44 1.44 0 110 2.88 1.44 1.44 0 010-2.88z"/></svg>
+    </a>
+    
+    <a href="https://www.tiktok.com/@auroracrepe" target="_blank" class="tk" title="TikTok">
+    <i class="fa-brands fa-tiktok"></i>
+    </a>
+
+    <a href="https://www.google.com/maps/search/?api=1&query=Aurora+Crepe+Ahuachapan" 
+       target="_blank" class="mapa" title="¿Cómo llegar?">
+       📍
+    </a>
+
+</div>
+
+</div>
+</footer>
+
+<script>
+
+
+let carrito = [];
+let estadoPantallaCarrito = "productos"; // "productos" o "formulario"
+
+// Carga inicial del perfil de usuario en LocalStorage
+window.onload = function() {
+    let sesionNombre = localStorage.getItem("perfilNombres");
+    let sesionTelefono = localStorage.getItem("perfilTelefono");
+    let sesionDireccion = localStorage.getItem("perfilDireccion");
+
+    if (sesionNombre) document.getElementById("cartNombre").value = sesionNombre;
+    if (sesionTelefono) document.getElementById("cartTelefono").value = sesionTelefono;
+    if (sesionDireccion) document.getElementById("cartDireccion").value = sesionDireccion;
+};
+
+// CONTROLES DE LA NUEVA VENTANA EMERGENTE LATERAL
+function abrirCarritoLateral() {
+    document.getElementById("cartSidebar").classList.add("active");
+    document.getElementById("cartOverlay").classList.add("active");
+    regresarAPantallaProductos(); // Siempre abrir inicialmente en la lista de items
+}
+
+function cerrarCarritoLateral() {
+    document.getElementById("cartSidebar").classList.remove("active");
+    document.getElementById("cartOverlay").classList.remove("active");
+}
+
+function regresarAPantallaProductos() {
+    estadoPantallaCarrito = "productos";
+    document.getElementById("pantalla-formulario").classList.remove("active");
+    document.getElementById("pantalla-productos").classList.add("active");
+    
+    // Restaurar estilo del botón inferior
+    let btn = document.getElementById("btnAccionCarrito");
+    btn.innerText = "Proceder al Pago ➔";
+    btn.className = "btn1";
+    btn.setAttribute("onclick", "avanzarFormularioPedido()");
+}
+
+function avanzarFormularioPedido() {
+    if (carrito.length === 0) {
+        alert("⚠️ Añade al menos un producto a tu carrito antes de proceder.");
+        return;
+    }
+    
+    estadoPantallaCarrito = "formulario";
+    document.getElementById("pantalla-productos").classList.remove("active");
+    document.getElementById("pantalla-formulario").classList.add("active");
+    
+    let btn = document.getElementById("btnAccionCarrito");
+    btn.innerText = "🚀 Confirmar por WhatsApp";
+    btn.className = "btn1";
+    btn.style.background = "#25D366";
+    btn.style.color = "white";
+    btn.setAttribute("onclick", "enviarPedidoFinal()"); // Corregido el espacio que rompía el botón
+}
+
+function obtenerUbicacion(btn) {
+    const status = document.getElementById('locationStatus');
+    const textarea = document.getElementById('cartDireccion');
+
+    if (!navigator.geolocation) {
+        status.innerText = "❌ Tu navegador no permite GPS.";
+        status.style.color = "#e74c3c";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+    status.innerText = "🛰️ Conectando con satélites GPS...";
+    status.style.color = "#b8860b";
+
+    // Opciones para forzar el uso del chip GPS
+    const gpsOptions = {
+        enableHighAccuracy: true, // ESTO ACTIVA EL CHIP GPS REAL
+        timeout: 15000,           // Esperar hasta 15 segundos a los satélites
+        maximumAge: 0             // No usar ubicaciones guardadas, pedir una nueva
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            const link = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            const precision = Math.round(accuracy);
+            
+            textarea.dataset.mapsLink = link;
+            status.innerText = `✅ GPS Activado (Precisión: ${precision}m)`;
+            status.style.color = "#25D366";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.background = "#25D366";
+            btn.innerText = "📍 Ubicación por Satélite Ok";
+            
+            if (window.navigator.vibrate) window.navigator.vibrate(100);
+        },
+        (error) => {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.background = "#e74c3c";
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    status.innerText = "❌ Permiso bloqueado. Toca el candado en la barra de direcciones y permite la 'Ubicación'.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    status.innerText = "❌ GPS apagado o sin señal. Actívalo.";
+                    break;
+                case error.TIMEOUT:
+                    status.innerText = "❌ Tiempo agotado. Intenta de nuevo afuera.";
+                    break;
+            }
+            status.style.color = "#e74c3c";
+        },
+        gpsOptions
+    );
+}
+
+function mostrarCategoria(idCategoria) {
+    let contenedores = document.querySelectorAll('.categoria-menu');
+    contenedores.forEach(c => c.style.display = 'none');
+    
+    let catSeleccionada = document.getElementById(idCategoria);
+    if(catSeleccionada) {
+        catSeleccionada.style.display = 'block';
+    }
+}
+
+// Agregar productos al carrito con animación de vuelo incluida
+function agregarAlCarrito(nombre, precio, elementoBoton) {
+    let productoExistente = carrito.find(item => item.nombre === nombre);
+    if (productoExistente) {
+        productoExistente.cantidad++;
+    } else {
+        carrito.push({ nombre: nombre, precio: precio, cantidad: 1 });
+    }
+
+    actualizarCarrito();
+
+    // Animación de vuelo hacia la esquina superior derecha
+    if (elementoBoton) {
+        const rectBoton = elementoBoton.getBoundingClientRect();
+        const targetCarrito = document.getElementById("cartHeaderBtn");
+        const rectCarrito = targetCarrito.getBoundingClientRect();
+
+        const particula = document.createElement("div");
+        particula.className = "flying-particle";
+        particula.style.left = `${rectBoton.left + rectBoton.width / 2 - 15}px`;
+        particula.style.top = `${rectBoton.top + rectBoton.height / 2 - 15}px`;
+        document.body.appendChild(particula);
+
+        setTimeout(() => {
+            particula.style.left = `${rectCarrito.left + rectCarrito.width / 2 - 10}px`;
+            particula.style.top = `${rectCarrito.top + rectCarrito.height / 2 - 10}px`;
+            particula.style.transform = "scale(0.3)";
+            particula.style.opacity = "0.3";
+        }, 50);
+
+        setTimeout(() => {
+            particula.remove();
+            targetCarrito.classList.add("animar-carrito");
+            setTimeout(() => targetCarrito.classList.remove("animar-carrito"), 300);
+        }, 750);
+    }
+}
+
+function agregarEspecialAlCarrito(elementoBoton) {
+    let tituloEspecial = document.querySelector(".banner-especial-info h3").innerText;
+    let precioTexto = document.getElementById("precio-banner-especial").innerText;
+    let precio = parseFloat(precioTexto.replace('$', '')) || 0.00;
+
+    agregarAlCarrito(tituloEspecial, precio, elementoBoton);
+}
+
+function cambiarCantidad(nombre, cambio) {
+    let producto = carrito.find(item => item.nombre === nombre);
+    if(producto) {
+        producto.cantidad += cambio;
+        if(producto.cantidad <= 0) {
+            carrito = carrito.filter(item => item.nombre !== nombre);
+        }
+    }
+    actualizarCarrito();
+}
+
+function eliminarDelCarrito(nombre) {
+    carrito = carrito.filter(item => item.nombre !== nombre);
+    actualizarCarrito();
+}
+
+function actualizarCarrito() {
+    let lista = document.getElementById("lista-carrito");
+    let totalContenedor = document.getElementById("cartTotal");
+    let contadorGlobal = document.getElementById("cartGlobalCount");
+    
+    lista.innerHTML = "";
+    let total = 0;
+    let totalProductos = 0;
+
+    if(carrito.length === 0) {
+        lista.innerHTML = "<p style='color:#666; text-align:center; padding-top:40px;'>Tu carrito está vacío.</p>";
+        // Si se vacía el carrito por completo, regresar a pantalla de productos por seguridad
+        if (estadoPantallaCarrito === "formulario") {
+            regresarAPantallaProductos();
+        }
+    } else {
+        carrito.forEach(item => {
+            let subtotal = item.precio * item.cantidad;
+            total += subtotal;
+            totalProductos += item.cantidad;
+
+            let div = document.createElement("div");
+            div.className = "item-carrito";
+            div.innerHTML = `
+                <div class="info-item">
+                    <h4>${item.nombre}</h4>
+                    <span>$${item.precio.toFixed(2)} x ${item.cantidad}</span>
+                </div>
+                <div class="controles-item">
+                    <button class="btn-control" onclick="cambiarCantidad('${item.nombre}', -1)">-</button>
+                    <button class="btn-control" onclick="cambiarCantidad('${item.nombre}', 1)">+</button>
+                    <button class="btn-control eliminar" onclick="eliminarDelCarrito('${item.nombre}')">🗑️</button>
+                </div>
+            `;
+            lista.appendChild(div);
+        });
+    }
+
+    totalContenedor.innerText = total.toFixed(2);
+    contadorGlobal.innerText = totalProductos;
+}
+
+// Envío unificado final de la información procesada por WhatsApp
+function enviarPedidoFinal() {
+    let nombre = document.getElementById("cartNombre").value.trim();
+    let phone = document.getElementById("cartTelefono").value.trim();
+    let direccion = document.getElementById("cartDireccion").value.trim();
+    let metodo = document.getElementById("metodoPago").value;
+
+    // Limpiar bordes de error previos
+    ["cartNombre", "cartTelefono", "cartDireccion", "metodoPago"].forEach(id => {
+        document.getElementById(id).style.border = "1px solid #ddd";
+    });
+
+    // Validar campos vacíos y marcarlos en rojo
+    let hayError = false;
+    if (!nombre) { document.getElementById("cartNombre").style.border = "2px solid #e74c3c"; hayError = true; }
+    if (!phone)  { document.getElementById("cartTelefono").style.border = "2px solid #e74c3c"; hayError = true; }
+    if (!direccion) { document.getElementById("cartDireccion").style.border = "2px solid #e74c3c"; hayError = true; }
+    if (!metodo) { document.getElementById("metodoPago").style.border = "2px solid #e74c3c"; hayError = true; }
+
+    if (hayError) {
+        // Quitar mensaje de error anterior si existe
+        let errorAnterior = document.getElementById("error-pedido");
+        if (errorAnterior) errorAnterior.remove();
+
+        let msg = document.createElement("p");
+        msg.id = "error-pedido";
+        msg.innerText = "⚠️ Por favor completa todos los campos requeridos.";
+        msg.style.cssText = "color:#e74c3c; font-weight:bold; text-align:center; margin-top:15px; font-size:14px;";
+        document.getElementById("pantalla-formulario").appendChild(msg);
+        return;
+    }
+
+    // Quitar mensaje de error si todo está bien
+    let errorAnterior = document.getElementById("error-pedido");
+    if (errorAnterior) errorAnterior.remove();
+
+    let costoTotal = 0;
+
+    let mensajeWhatsApp = `✨ *NUEVO PEDIDO - AURORA CREPE* ✨\n`;
+    mensajeWhatsApp += `👤 *Cliente:* ${nombre}\n`;
+    mensajeWhatsApp += `📞 *Teléfono:* ${phone}\n`;
+    const mapsLink = document.getElementById("cartDireccion").dataset.mapsLink || "";
+    mensajeWhatsApp += `📍 *Dirección:* ${direccion}${mapsLink ? "\n🗺️ *Mapa:* " + mapsLink : ""}\n`;
+    mensajeWhatsApp += `💳 *Pago:* ${metodo}\n\n`;
+    mensajeWhatsApp += `🛒 *DETALLE:*\n`;
+
+    carrito.forEach(item => {
+        let subtotal = item.precio * item.cantidad;
+        costoTotal += subtotal;
+        mensajeWhatsApp += `▪️ *${item.cantidad}x* ${item.nombre} → *$${subtotal.toFixed(2)}*\n`;
+    });
+
+    mensajeWhatsApp += `\n💰 *TOTAL A PAGAR: $${costoTotal.toFixed(2)}*\n\n`;
+    mensajeWhatsApp += `¡Muchas gracias por elegir Aurora Crepe! 🥞✨`;
+
+    // --- INTEGRACIÓN CON CALLMEBOT ---
+    const apiKeyBot = "8129090";
+    const phoneOwner = "50376250194";
+    const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${phoneOwner}&text=${encodeURIComponent(mensajeWhatsApp)}&apikey=${apiKeyBot}`;
+    
+    // Intentar enviar notificación silenciosa al bot
+    fetch(callMeBotUrl, { mode: 'no-cors' }).catch(e => console.log("CallMeBot Notify Triggered"));
+    // ---------------------------------
+
+    let url = `https://api.whatsapp.com/send?phone=50376250194&text=${encodeURIComponent(mensajeWhatsApp)}`;
+    window.open(url, '_blank');
+
+    // Limpiar carrito tras enviar
+    carrito = [];
+    actualizarCarrito();
+    cerrarCarritoLateral();
+}
+
+// Modal Perfil de Usuario independiente
+function cerrarModalPerfil() {
+    document.getElementById("modalPerfil").classList.remove("active");
+}
+
+function guardarPerfil() {
+    let nom = document.getElementById("perfilNombres").value.trim();
+    let tel = document.getElementById("perfilTelefono").value.trim();
+    let dir = document.getElementById("perfilDireccion").value.trim();
+
+    if(nom === "" || tel === "" || dir === "") {
+        alert("Por favor completa los campos principales para poder guardar tu perfil.");
+        return;
+    }
+
+    localStorage.setItem("perfilNombres", nom);
+    localStorage.setItem("perfilTelefono", tel);
+    localStorage.setItem("perfilDireccion", dir);
+
+    document.getElementById("cartNombre").value = nom;
+    document.getElementById("cartTelefono").value = tel;
+    document.getElementById("cartDireccion").value = dir;
+
+    alert("👤 ¡Perfil guardado con éxito!");
+    cerrarModalPerfil();
+}
+
+// === CONTROL INTELIGENTE DEL CARRUSEL ===
+(function() {
+    let indexAnuncio = 0;
+    const container = document.getElementById("anunciosContainer");
+    const track = document.getElementById("anunciosTrack");
+    const slides = document.querySelectorAll(".anuncio-slide");
+    const dotsContainer = document.getElementById("anunciosDots");
+    
+    // Elementos del visor a pantalla completa
+    const visorModal = document.getElementById("visorFotoModal");
+    const fotoEnGrande = document.getElementById("fotoEnGrande");
+
+    let intervaloAnuncio = null; // Guardará el temporizador único
+
+    if (!track || slides.length === 0) return;
+
+    // 1. Generar puntitos abajo de forma interactiva
+    if (dotsContainer) {
+        dotsContainer.innerHTML = "";
+        slides.forEach((_, i) => {
+            const dot = document.createElement("div");
+            // El primer puntito inicia activo
+            dot.className = `dot ${i === 0 ? 'active' : ''}`;
+            
+            // HACER INTERACTIVO EL PUNTITO: Al hacer clic o puyar, viaja a ese anuncio
+            dot.addEventListener("click", function(e) {
+                e.stopPropagation(); // Evita que se abra la pantalla completa al tocar el puntito
+                irAlAnuncio(i);
+            });
+            
+            dotsContainer.appendChild(dot);
+        });
+    }
+
+    const dots = dotsContainer ? dotsContainer.querySelectorAll(".dot") : [];
+
+    // 2. Función para mover el carrusel a la imagen actual
+    function cambiarImagen() {
+        track.style.transform = `translateX(-${indexAnuncio * 100}%)`;
+        if (dots.length > 0) {
+            dots.forEach(d => d.classList.remove("active"));
+            if (dots[indexAnuncio]) dots[indexAnuncio].classList.add("active");
+        }
+    }
+
+    // 3. Función específica para saltar a un anuncio desde un puntito
+    function irAlAnuncio(nuevoIndex) {
+        indexAnuncio = nuevoIndex;
+        cambiarImagen();
+        detenerCiclo(); // Detiene el reloj actual
+        iniciarCiclo(); // Inicia un nuevo reloj limpio de 5 segundos
+    }
+
+    function siguienteAnuncio() {
+        indexAnuncio++;
+        if (indexAnuncio >= slides.length) {
+            indexAnuncio = 0; // Regresa al inicio
+        }
+        cambiarImagen();
+    }
+
+    // 4. Sistema de tiempo estricto (Evita duplicados)
+    function iniciarCiclo() {
+        if (intervaloAnuncio === null) {
+            intervaloAnuncio = setInterval(siguienteAnuncio, 5000); // 5 segundos exactos
+        }
+    }
+
+    function detenerCiclo() {
+        if (intervaloAnuncio !== null) {
+            clearInterval(intervaloAnuncio);
+            intervaloAnuncio = null; // Limpia por completo el reloj anterior
+        }
+    }
+
+    // 5. EVENTOS DE MOUSE (Pausar en PC)
+    if (container) {
+        container.addEventListener("mouseenter", detenerCiclo); // Congela al pasar el mouse
+        container.addEventListener("mouseleave", iniciarCiclo);   // Reanuda al quitarlo
+
+        // 6. EVENTO CLIC / PUYAR EN EL CONTENEDOR (Abrir pantalla completa)
+        container.addEventListener("click", function(e) {
+            // Si el clic fue en los puntitos, no abre el visor a pantalla completa
+            if (e.target.classList.contains('dot') || e.target.id === 'anunciosDots') return;
+
+            const imgActiva = slides[indexAnuncio].querySelector("img");
+            if (imgActiva && visorModal && fotoEnGrande) {
+                fotoEnGrande.src = imgActiva.src;
+                visorModal.style.display = "flex";
+                detenerCiclo(); // Pausa obligatoria mientras se ve en grande
+            }
+        });
+    }
+
+    // 7. REGRESAR A LA APP (Puyar pantalla completa para cerrar)
+    if (visorModal) {
+        visorModal.addEventListener("click", function() {
+            visorModal.style.display = "none";
+            detenerCiclo(); // Limpieza preventiva
+            iniciarCiclo(); // Arranca un reloj limpio de 5 segundos desde cero
+        });
+    }
+
+    // Arrancar el carrusel de forma segura
+    detenerCiclo();
+    iniciarCiclo();
+})();
+
+// FUNCIÓN PARA VER IMÁGENES DEL MENÚ EN GRANDE
+
+document.addEventListener("DOMContentLoaded", function() {
+    const visorModal = document.getElementById("visorFotoModal");
+    const fotoEnGrande = document.getElementById("fotoEnGrande");
+    
+    // Buscamos el contenedor del menú por su ID principal
+    const contenedorMenu = document.getElementById("menu-container");
+
+    if (contenedorMenu && visorModal && fotoEnGrande) {
+        // Buscamos TODAS las imágenes que existan dentro del menú
+        const imagenesMenu = contenedorMenu.getElementsByTagName("img");
+
+        for (let img of imagenesMenu) {
+            // Les ponemos el cursor de la lupa para indicar que son clickeables
+            img.style.cursor = "zoom-in";
+
+            img.addEventListener("click", function() {
+                // 1. Pasamos la imagen al modal
+                fotoEnGrande.src = this.src;
+                
+                // 2. Forzamos al modal a mostrarse en la pantalla
+                visorModal.style.setProperty("display", "flex", "important");
+                visorModal.classList.add("active");
+            });
+        }
+    }
+
+    // Código para cerrar el modal al hacer clic afuera de la foto
+    if (visorModal) {
+        visorModal.addEventListener("click", function(e) {
+            if (e.target !== fotoEnGrande) {
+                visorModal.style.setProperty("display", "none", "important");
+                visorModal.classList.remove("active");
+                if (fotoEnGrande) fotoEnGrande.src = "";
+            }
+        });
+    }
+});
+
+// === CREA TU CREPA BOTÓN CARRITO ===
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("crepeForm");
+  if(form) {
+    form.addEventListener("change", calculateTotal);
+  }
+});
+
+function calculateTotal() {
+  let total = 0;
+  const form = document.getElementById("crepeForm");
+  if(!form) return;
+  
+  // 1. Base Dulce
+  const baseSelected = form.querySelector('input[name="base"]:checked');
+  if (baseSelected) total += parseFloat(baseSelected.dataset.price);
+
+  // 2. Toppings
+  const toppings = form.querySelectorAll('input[name="toppings"]:checked');
+  toppings.forEach(top => {
+    total += parseFloat(top.dataset.price);
+  });
+
+  // 3. Tipo de Masa
+  const masaSelected = form.querySelector('input[name="masa"]:checked');
+  if (masaSelected) total += parseFloat(masaSelected.dataset.price);
+
+  // 4. Extras
+  const extras = form.querySelectorAll('input[name="extras"]:checked');
+  extras.forEach(ext => {
+    total += parseFloat(ext.dataset.price);
+  });
+
+  // 5. Dedicatoria Dinámica (Si se seleccionó "Sí")
+  const dedicatoriaSi = form.querySelector('input[name="dedicatoria_opcion"]:checked');
+  if (dedicatoriaSi && dedicatoriaSi.value === "si") {
+    total += parseFloat(dedicatoriaSi.dataset.price || 1.50);
+  }
+
+  // Actualizar visor de precio en la pantalla
+  document.getElementById("totalPrice").innerText = `$${total.toFixed(2)}`;
+}
+
+// Función para mostrar/ocultar el cuadro de la dedicatoria
+function toggleDedicatoriaBox(show) {
+  const container = document.getElementById("dedicatoriaContainer");
+  if(show) {
+    container.style.display = "block";
+  } else {
+    container.style.display = "none";
+    document.getElementById("textoDedicatoria").value = ""; // Limpia si ponen que no
+  }
+  calculateTotal(); // Forzar actualización de precio
+}
+
+function changeMasaVisual(tipo) {
+  const imgElement = document.getElementById("crepeImg");
+  if(!imgElement) return;
+  if(tipo === 'canela') {
+    imgElement.style.filter = "sepia(0.4) saturate(1.2) hue-rotate(-10deg)";
+  } else if(tipo === 'chocolate') {
+    imgElement.style.filter = "brightness(0.6) sepia(0.2)";
+  } else {
+    imgElement.style.filter = "none";
+  }
+}
+
+// ANIMACIÓN Y ADICIÓN REAL AL CARRITO DE AURORA CREPÉ
+function animateToCart() {
+  const crepeVisual = document.getElementById("crepeVisual");
+  const cartButton = document.getElementById("cartHeaderBtn") || document.querySelector(".cart-header-btn");
+  
+  if (!crepeVisual || !cartButton) return;
+  
+  const crepeRect = crepeVisual.getBoundingClientRect();
+  const cartRect = cartButton.getBoundingClientRect();
+
+  // 1. Crear clon volador para la animación
+  const clone = crepeVisual.cloneNode(true);
+  clone.style.position = "fixed";
+  clone.style.top = `${crepeRect.top}px`;
+  clone.style.left = `${crepeRect.left}px`;
+  clone.style.width = `${crepeRect.width}px`;
+  clone.style.height = `${crepeRect.height}px`;
+  clone.style.margin = "0";
+  clone.style.borderRadius = "50%";
+  
+  document.body.appendChild(clone);
+
+  // Forzar que el navegador registre la posición inicial
+  clone.offsetWidth;
+
+  // Ejecutar vuelo animado hacia el carrito
+  clone.classList.add("fly-to-cart");
+  clone.style.top = `${cartRect.top + 10}px`;
+  clone.style.left = `${cartRect.left + 20}px`;
+
+  // 2. RECOPILAR TODOS LOS ITEMS SELECCIONADOS
+  const form = document.getElementById("crepeForm");
+  
+  const base = form.querySelector('input[name="base"]:checked')?.value || "Ninguna";
+  const toppings = Array.from(form.querySelectorAll('input[name="toppings"]:checked')).map(el => el.value);
+  const masa = form.querySelector('input[name="masa"]:checked')?.value || "Clásica";
+  const extras = Array.from(form.querySelectorAll('input[name="extras"]:checked')).map(el => el.value);
+  const precioTexto = document.getElementById("totalPrice").innerText;
+  
+  // Convertimos el precio en un número real (Ej: "$3.75" pasa a ser 3.75)
+  const precioNumerico = parseFloat(precioTexto.replace('$', ''));
+
+  // Construimos el nombre detallado para que se vea genial en la lista del pedido
+  let descripcionCrepa = `Crepa Pers. (${masa}, Base: ${base}`;
+  if (toppings.length > 0) descripcionCrepa += `, Tops: ${toppings.join('/')}`;
+  if (extras.length > 0) descripcionCrepa += `, Ext: ${extras.join('/')}`;
+  
+  // Si agregaron dedicatoria, la incluimos de forma visible
+  const dedicatoriaOpcion = form.querySelector('input[name="dedicatoria_opcion"]:checked')?.value;
+  if (dedicatoriaOpcion === "si") {
+    const textoDedi = document.getElementById("textoDedicatoria").value || "Sin mensaje";
+    descripcionCrepa += `, Dedicatoria: "${textoDedi}"`;
+  }
+  descripcionCrepa += `)`;
+
+  // Guardamos el botón original para simular el efecto visual de tu app
+  const botonOrigen = document.getElementById("btnAddToCart");
+
+  // 3. Al terminar la animación, se mete silenciosamente en tu sistema de compras
+  setTimeout(() => {
+    clone.remove();
+    
+    // LLAMADA DIRECTA A TU FUNCIÓN ORIGINAL DEL CARRITO:
+    // Le pasamos el desglose como "nombre" y el valor calculado
+    if (typeof agregarAlCarrito === "function") {
+      agregarAlCarrito(descripcionCrepa, precioNumerico, botonOrigen);
+    } else {
+      console.error("No se encontró la función agregarAlCarrito");
+    }
+    
+    // Limpiar el formulario para que puedan armar una nueva crepa
+    form.reset();
+    if(typeof toggleDedicatoriaBox === "function") toggleDedicatoriaBox(false); // Oculta el cuadro de texto de dedicatoria
+    if(typeof changeMasaVisual === "function") changeMasaVisual('clasica');   // Restaura la imagen base
+    document.getElementById("totalPrice").innerText = "$3.00";                // Resetea el precio inicial
+    
+  }, 800); 
+}
+
+// ========================================================
+// CONTROL DE ADMINISTRACIÓN AURORA CREPE
+// ========================================================
+
+let clicksLogoCount = 0;
+let lastClickTime = 0;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const appLogo = document.querySelector(".logo-app");
+    if (appLogo) {
+        appLogo.style.cursor = "pointer";
+        appLogo.addEventListener("click", () => {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastClickTime > 1500) clicksLogoCount = 0;
+            clicksLogoCount++;
+            lastClickTime = currentTime;
+
+            if (clicksLogoCount === 5) {
+                clicksLogoCount = 0;
+                abrirAdminLogin();
+            }
+        });
+    }
+    
+    // Inicializar almacenes con tus categorías reales
+    if (!localStorage.getItem("aurora_productos_menu")) {
+        localStorage.setItem("aurora_productos_menu", JSON.stringify({
+            "crepas-dulces": [], "crepas-saladas": [], "paninis": [], "hamburguesas": [],
+            "entradas-dulces": [], "entradas-saladas": [], "bebidas-calientes": [], "bebidas-frias": []
+        }));
+    }
+    if (!localStorage.getItem("aurora_modificaciones_sistema")) {
+        localStorage.setItem("aurora_modificaciones_sistema", JSON.stringify({
+            bases: {}, toppingsRegular: {}, toppingsPremium: {}, masas: {}, extras: {},
+            "crepas-dulces": {}, "crepas-saladas": {}, "paninis": {}, "hamburguesas": {},
+            "entradas-dulces": {}, "entradas-saladas": {}, "bebidas-calientes": {}, "bebidas-frias": []
+        }));
+    }
+    
+    inyectarProductosYModificacionesLocal();
+});
+
+function abrirAdminLogin() {
+    document.getElementById("adminLoginModal").classList.add("active");
+}
+
+function cerrarAdminLogin() {
+    document.getElementById("adminLoginModal").classList.remove("active");
+    document.getElementById("adminUserField").value = "";
+    document.getElementById("adminPassField").value = "";
+}
+
+function validarAccesoAdmin() {
+    const user = document.getElementById("adminUserField").value.trim().toLowerCase();
+    const pass = document.getElementById("adminPassField").value;
+
+    // MODIFICA TU USUARIO Y CONTRASEÑA AQUÍ (Ocultos en Base64 al inspeccionar)
+    const usuarioCorrectoEncifrado = btoa("aurora");       
+    const contrasenaCorrectaEncifrada = btoa("Aurora2026"); 
+
+    if (btoa(user) === usuarioCorrectoEncifrado && btoa(pass) === contrasenaCorrectaEncifrada) {
+        cerrarAdminLogin();
+        abrirAdminDashboard();
+    } else {
+        alert("🚨 Credenciales de Administración Incorrectas. Acceso denegado.");
+    }
+}
+
+function abrirAdminDashboard() {
+    document.getElementById("adminDashboardModal").classList.add("active");
+    cambiarPestañaAdmin('crear');
+}
+
+function cerrarAdminDashboard() {
+    document.getElementById("adminDashboardModal").classList.remove("active");
+}
+
+function cambiarPestañaAdmin(pestana) {
+    const tabCrear = document.getElementById("adminPanelCrear");
+    const tabEditar = document.getElementById("adminPanelEditar");
+    const btnCrear = document.getElementById("tabCrearBtn");
+    const btnEditar = document.getElementById("tabEditarBtn");
+
+    if (pestana === 'crear') {
+        tabCrear.style.display = "block";
+        tabEditar.style.display = "none";
+        btnCrear.className = "btn1";
+        btnEditar.className = "btn2";
+    } else {
+        tabCrear.style.display = "none";
+        tabEditar.style.display = "block";
+        btnCrear.className = "btn2";
+        btnEditar.className = "btn1";
+        cargarOpcionesParaEditar();
+    }
+}
+
+function guardarNuevoProductoMenu() {
+    const categoria = document.getElementById("newProductCategory").value;
+    const nombre = document.getElementById("newProductName").value.trim();
+    const precio = parseFloat(document.getElementById("newProductPrice").value);
+    const img = document.getElementById("newProductImg").value.trim() || "https://images.unsplash.com/photo-1519676867240-f03562e64548?q=80&w=300";
+    const descripcion = document.getElementById("newProductDescription").value.trim();
+
+    if (!nombre || isNaN(precio) || !descripcion) {
+        alert("Por favor rellena todos los campos requeridos.");
+        return;
+    }
+
+    const productosMenu = JSON.parse(localStorage.getItem("aurora_productos_menu"));
+    const idUnico = "prod_" + new Date().getTime();
+    
+    // Validar inicialización de la categoría por seguridad
+    if(!productosMenu[categoria]) productosMenu[categoria] = [];
+    
+    productosMenu[categoria].push({ id: idUnico, nombre, precio, img, descripcion });
+    localStorage.setItem("aurora_productos_menu", JSON.stringify(productosMenu));
+
+    alert("¡Éxito! Producto agregado y publicado en el menú.");
+    
+    document.getElementById("newProductName").value = "";
+    document.getElementById("newProductPrice").value = "";
+    document.getElementById("newProductImg").value = "";
+    document.getElementById("newProductDescription").value = "";
+    
+    inyectarProductosYModificacionesLocal();
+}
+
+function cargarOpcionesParaEditar() {
+    const categoria = document.getElementById("editCategorySelector").value;
+    const container = document.getElementById("listaOpcionesEditablesContainer");
+    container.innerHTML = "";
+
+    const modificaciones = JSON.parse(localStorage.getItem("aurora_modificaciones_sistema"));
+    const productosNuevos = JSON.parse(localStorage.getItem("aurora_productos_menu"));
+    const esIngredienteCrepa = ['bases', 'toppingsRegular', 'toppingsPremium', 'masas', 'extras'].includes(categoria);
+
+    if (esIngredienteCrepa) {
+        let inputsOriginales = [];
+        if (categoria === 'bases') inputsOriginales = document.querySelectorAll('input[name="base"]');
+        if (categoria === 'toppingsRegular') inputsOriginales = document.querySelectorAll('input[name="toppings"]:not([value="Kiwi"]):not([value="Melocotón"]):not([value="M&M"]):not([value="Marshmallows"]):not([value="Chispas de chocolate blanco"]):not([value="Chispas de chocolate negro"])');
+        if (categoria === 'toppingsPremium') inputsOriginales = document.querySelectorAll('input[name="toppings"][value="Kiwi"], input[name="toppings"][value="Melocotón"], input[name="toppings"][value="M&M"], input[name="toppings"][value="Marshmallows"], input[name="toppings"][value="Chispas de chocolate blanco"], input[name="toppings"][value="Chispas de chocolate negro"]');
+        if (categoria === 'masas') inputsOriginales = document.querySelectorAll('input[name="masa"]');
+        if (categoria === 'extras') inputsOriginales = document.querySelectorAll('input[name="extras"]');
+
+        inputsOriginales.forEach((elem) => {
+            const valOrig = elem.value;
+            const precioOrig = elem.getAttribute("data-price") || "0.00";
+            if(!modificaciones[categoria]) modificaciones[categoria] = {};
+            const info = modificaciones[categoria][valOrig] || { nombre: valOrig, precio: precioOrig };
+
+            renderizarFilaEdicion(container, valOrig, info.nombre, info.precio, (n, p) => {
+                modificaciones[categoria][valOrig] = { nombre: n, precio: p };
+                localStorage.setItem("aurora_modificaciones_sistema", JSON.stringify(modificaciones));
+            });
+        });
+    } else {
+        // Buscar las tarjetas del HTML usando el ID único de tus categorías reales
+        const contenedorHtml = document.getElementById(categoria);
+        const cardsOriginales = contenedorHtml ? contenedorHtml.querySelectorAll(".card") : [];
+        
+        let productosProcesados = [];
+        if (!modificaciones[categoria]) modificaciones[categoria] = {};
+
+        cardsOriginales.forEach((card, idx) => {
+            const idIdentificador = "html_" + categoria + "_" + idx;
+            if (modificaciones[categoria][idIdentificador] && modificaciones[categoria][idIdentificador].eliminado) return;
+
+            const nombreOrig = card.querySelector("h2")?.innerText || "Producto " + idx;
+            const precioOrig = card.querySelector(".precio")?.innerText.replace("$", "") || "0.00";
+            const descOrig = card.querySelector("p")?.innerText || "";
+            const imgOrig = card.querySelector("img")?.src || "";
+            const info = modificaciones[categoria][idIdentificador] || { nombre: nombreOrig, precio: precioOrig, descripcion: descOrig, img: imgOrig };
+            
+            productosProcesados.push({ id: idIdentificador, ...info });
+        });
+
+        if (productosNuevos[categoria]) {
+            productosNuevos[categoria].forEach(prod => {
+                const info = modificaciones[categoria][prod.id] || { nombre: prod.nombre, precio: prod.precio, descripcion: prod.descripcion, img: prod.img };
+                if (info.eliminado) return;
+                
+                productosProcesados.push({ id: prod.id, ...info });
+            });
+        }
+
+        if (productosProcesados.length === 0) {
+            container.innerHTML = "<p style='color:#666; font-size:14px; text-align:center;'>No hay productos en esta categoría.</p>";
+            return;
+        }
+
+        productosProcesados.forEach(prod => {
+            const row = document.createElement("div");
+            row.style = "background:#fff; border:1px solid #ddd; padding:12px; border-radius:10px; margin-bottom:15px; color:#222;";
+            row.innerHTML = `
+                <div style="font-size:11px; color:#c59b27; font-weight:bold; margin-bottom:5px;">ID: ${prod.id}</div>
+                <div style="margin-bottom:8px;">
+                    <label style="font-size:11px; color:#666; font-weight:bold;">Nombre:</label>
+                    <input type="text" value="${prod.nombre}" id="edit_name_${prod.id}" style="width:100%; padding:6px; font-size:13px; border:1px solid #ccc; border-radius:6px;">
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:8px;">
+                    <div style="width: 90px;">
+                        <label style="font-size:11px; color:#666; font-weight:bold;">Precio ($):</label>
+                        <input type="number" step="0.01" value="${parseFloat(prod.precio).toFixed(2)}" id="edit_price_${prod.id}" style="width:100%; padding:6px; font-size:13px; border:1px solid #ccc; border-radius:6px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:11px; color:#666; font-weight:bold;">URL Foto:</label>
+                        <input type="text" value="${prod.img}" id="edit_img_${prod.id}" style="width:100%; padding:6px; font-size:13px; border:1px solid #ccc; border-radius:6px;">
+                    </div>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label style="font-size:11px; color:#666; font-weight:bold;">Descripción:</label>
+                    <textarea id="edit_desc_${prod.id}" style="width:100%; padding:6px; font-size:12px; height:45px; border:1px solid #ccc; border-radius:6px; resize:none;">${prod.descripcion}</textarea>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn1" style="padding:6px 15px; font-size:12px; flex: 1; border-radius:6px;" onclick="guardarCambioProductoCatalogo('${categoria}', '${prod.id}')">💾 Guardar Cambios</button>
+                    <button class="btn-control eliminar" style="padding:6px 15px; font-size:12px; border-radius:6px; width: auto; background: #e74c3c; cursor: pointer;" onclick="eliminarProductoAdmin('${categoria}', '${prod.id}')">🗑️</button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+}
+
+function renderizarFilaEdicion(container, key, nombre, precio, callbackGuardar) {
+    const row = document.createElement("div");
+    row.style = "display: flex; gap: 10px; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;";
+    row.innerHTML = `
+        <div style="flex: 1;">
+            <span style="font-size:10px; color:#999; display:block;">Original: ${key}</span>
+            <input type="text" value="${nombre}" id="editName_${key}" style="padding:6px; font-size:13px; width:100%; border:1px solid #ccc; border-radius:6px;">
+        </div>
+        <div style="width: 80px;">
+            <span style="font-size:10px; color:#999; display:block;">Precio ($)</span>
+            <input type="number" step="0.01" value="${precio}" id="editPrice_${key}" style="padding:6px; font-size:13px; width:100%; border:1px solid #ccc; border-radius:6px;">
+        </div>
+        <button class="btn1" style="padding:8px 12px; font-size:12px; margin-top:14px; border-radius:6px;">✓</button>
+    `;
+    container.appendChild(row);
+
+    row.querySelector("button").onclick = () => {
+        const n = document.getElementById(`editName_${key}`).value.trim();
+        const p = parseFloat(document.getElementById(`editPrice_${key}`).value).toFixed(2);
+        if(!n || isNaN(p)) return alert("Valores incorrectos.");
+        callbackGuardar(n, p);
+        alert("¡Cambio guardado!");
+        inyectarProductosYModificacionesLocal();
+        cargarOpcionesParaEditar();
+    };
+}
+
+function guardarCambioProductoCatalogo(categoria, id) {
+    const n = document.getElementById(`edit_name_${id}`).value.trim();
+    const p = parseFloat(document.getElementById(`edit_price_${id}`).value);
+    const img = document.getElementById(`edit_img_${id}`).value.trim();
+    const d = document.getElementById(`edit_desc_${id}`).value.trim();
+
+    if(!n || isNaN(p)) return alert("Por favor rellena el nombre y precio.");
+
+    const modificaciones = JSON.parse(localStorage.getItem("aurora_modificaciones_sistema"));
+    if(!modificaciones[categoria]) modificaciones[categoria] = {};
+    modificaciones[categoria][id] = { nombre: n, precio: p, descripcion: d, img: img };
+    
+    localStorage.setItem("aurora_modificaciones_sistema", JSON.stringify(modificaciones));
+    alert("¡Producto modificado con éxito!");
+    inyectarProductosYModificacionesLocal();
+    cargarOpcionesParaEditar();
+}
+
+function eliminarProductoAdmin(categoria, id) {
+    if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) return;
+
+    if (id.startsWith("prod_")) {
+        // Es un producto nuevo, lo borramos de la lista de productos nuevos
+        let productosNuevos = JSON.parse(localStorage.getItem("aurora_productos_menu"));
+        productosNuevos[categoria] = productosNuevos[categoria].filter(p => p.id !== id);
+        localStorage.setItem("aurora_productos_menu", JSON.stringify(productosNuevos));
+        
+        // También limpiamos cualquier modificación que tuviera
+        let modificaciones = JSON.parse(localStorage.getItem("aurora_modificaciones_sistema"));
+        if (modificaciones[categoria] && modificaciones[categoria][id]) {
+            delete modificaciones[categoria][id];
+            localStorage.setItem("aurora_modificaciones_sistema", JSON.stringify(modificaciones));
+        }
+    } else {
+        // Es un producto original del HTML, lo marcamos como eliminado en las modificaciones
+        let modificaciones = JSON.parse(localStorage.getItem("aurora_modificaciones_sistema"));
+        if (!modificaciones[categoria]) modificaciones[categoria] = {};
+        if (!modificaciones[categoria][id]) modificaciones[categoria][id] = {};
+        modificaciones[categoria][id].eliminado = true;
+        localStorage.setItem("aurora_modificaciones_sistema", JSON.stringify(modificaciones));
+    }
+
+    alert("Producto eliminado correctamente.");
+    inyectarProductosYModificacionesLocal();
+    cargarOpcionesParaEditar();
+}
+
+function inyectarProductosYModificacionesLocal() {
+    const modificaciones = JSON.parse(localStorage.getItem("aurora_modificaciones_sistema"));
+    const productosNuevos = JSON.parse(localStorage.getItem("aurora_productos_menu"));
+
+    // 1. Inyección en ingredientes base
+    const catIngredientes = ['bases', 'toppingsRegular', 'toppingsPremium', 'masas', 'extras'];
+    catIngredientes.forEach((catKey) => {
+        const items = modificaciones[catKey] || {};
+        Object.keys(items).forEach((valOriginal) => {
+            const dataNueva = items[valOriginal];
+            const inputElem = document.querySelector(`input[value="${valOriginal}"]`);
+            if (inputElem) {
+                inputElem.setAttribute("data-price", dataNueva.precio);
+                const label = inputElem.parentElement;
+                if(label && label.classList.contains("option-item")) {
+                    const extraTxt = catKey === 'masas' ? ` (+$${dataNueva.precio})` : '';
+                    label.innerHTML = `<input type="${inputElem.type}" name="${inputElem.name}" value="${valOriginal}" data-price="${dataNueva.precio}" ${inputElem.checked ? 'checked' : ''} ${inputElem.onchange ? 'onchange="'+inputElem.getAttribute('onchange')+'"' : ''}> ${dataNueva.nombre}${extraTxt}`;
+                }
+            }
+        });
+    });
+
+    // 2. Inyección en las 8 categorías del contenedor de tu catálogo
+    const catFijas = ["crepas-dulces", "crepas-saladas", "paninis", "hamburguesas", "entradas-dulces", "entradas-saladas", "bebidas-calientes", "bebidas-frias"];
+    
+    catFijas.forEach((catKey) => {
+        // Busca directamente el div contenedor que tenga el ID de tu categoría
+        const contenedorSeccion = document.getElementById(catKey);
+        if (contenedorSeccion) {
+            // Buscamos la rejilla interna (el contenedor ".menu" o ".grid-productos")
+            let gridMenu = contenedorSeccion.querySelector(".menu") || contenedorSeccion.querySelector(".grid-productos") || contenedorSeccion;
+            
+            if (gridMenu) {
+                if (!gridMenu.getAttribute("data-original-html")) {
+                    gridMenu.setAttribute("data-original-html", gridMenu.innerHTML);
+                }
+
+                gridMenu.innerHTML = gridMenu.getAttribute("data-original-html");
+                const cardsHtmlOriginales = gridMenu.querySelectorAll(".card");
+
+                cardsHtmlOriginales.forEach((card, idx) => {
+                    const idIdentificador = "html_" + catKey + "_" + idx;
+                    const cambio = modificaciones[catKey] ? modificaciones[catKey][idIdentificador] : null;
+                    if (cambio) {
+                        if (cambio.eliminado) {
+                            card.style.display = "none";
+                            return;
+                        }
+                        if(card.querySelector("h2")) card.querySelector("h2").innerText = cambio.nombre;
+                        if(card.querySelector(".precio")) card.querySelector(".precio").innerText = `$${parseFloat(cambio.precio).toFixed(2)}`;
+                        if(card.querySelector("p")) card.querySelector("p").innerText = cambio.descripcion;
+                        if(card.querySelector("img")) card.querySelector("img").src = cambio.img;
+                    }
+                });
+
+                // Inyección de nuevos productos creados desde el panel
+                if (productosNuevos[catKey]) {
+                    productosNuevos[catKey].forEach(prod => {
+                        const cambio = (modificaciones[catKey] && modificaciones[catKey][prod.id]) ? modificaciones[catKey][prod.id] : {};
+                        const finalNombre = cambio.nombre || prod.nombre;
+                        const finalPrecio = parseFloat(cambio.precio || prod.precio);
+                        const finalDesc = cambio.descripcion || prod.descripcion;
+                        const finalImg = cambio.img || prod.img;
+
+                        const nuevaCard = document.createElement("div");
+                        nuevaCard.classList.add("card");
+                        nuevaCard.innerHTML = `
+                            <img src="${finalImg}" alt="${finalNombre}" class="img-producto">
+                            <h2>${finalNombre}</h2>
+                            <p>${finalDesc}</p>
+                            <span class="precio">$${finalPrecio.toFixed(2)}</span>
+                            <button class="btn-agregar">Agregar al Pedido</button>
+                        `;
+                        gridMenu.appendChild(nuevaCard);
+                    });
+                }
+            }
+        }
+    });
+}
+
+</script>
+
+<!-- ========================================== -->
+<!-- INTERFAZ DEL PANEL DE ADMINISTRACIÓN EXACTO -->
+<!-- ========================================== -->
+<div class="modal-overlay" id="adminLoginModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="cerrarAdminLogin()">✕</span>
+        <h2>🔑 Acceso Propietario</h2>
+        <p>Introduce las credenciales de administración de Aurora Crepe</p>
+        <div class="input-group">
+            <label>Usuario Maestro</label>
+            <input type="text" id="adminUserField" autocomplete="off" placeholder="Ingresa tu usuario">
+        </div>
+        <div class="input-group">
+            <label>Contraseña de Seguridad</label>
+            <input type="password" id="adminPassField" autocomplete="off" placeholder="••••••••">
+        </div>
+        <button class="btn1" style="width:100%; border-radius:12px; padding:14px;" onclick="validarAccesoAdmin()">Ingresar al Panel</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="adminDashboardModal" style="backdrop-filter: blur(8px);">
+    <div class="modal-content" style="max-width: 650px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <span class="close-btn" onclick="cerrarAdminDashboard()">✕</span>
+        <h2 style="color: #0b5d59; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px;">
+            ⚙️ Panel de Gestión Aurora
+        </h2>
+        
+        <!-- PESTAÑAS -->
+        <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+            <button class="btn1" id="tabCrearBtn" onclick="cambiarPestañaAdmin('crear')" style="padding: 10px 15px; font-size: 14px; border-radius: 10px;">Nuevo Producto</button>
+            <button class="btn2" id="tabEditarBtn" onclick="cambiarPestañaAdmin('editar')" style="padding: 10px 15px; font-size: 14px; border-radius: 10px; border: 1px solid #0b5d59;">Modificar Catálogos</button>
+        </div>
+
+        <!-- SECCIÓN: CREAR NUEVO PRODUCTO -->
+        <div id="adminPanelCrear">
+            <h3 style="color: #b8860b; margin-bottom: 15px;">Añadir Producto Nuevo al Menú</h3>
+            <div class="input-group">
+                <label>Categoría Destino</label>
+                <select id="newProductCategory">
+                    <option value="crepas-dulces">Crepas Dulces</option>
+                    <option value="crepas-saladas">Crepas Saladas</option>
+                    <option value="paninis">Paninis</option>
+                    <option value="hamburguesas">Hamburguesas</option>
+                    <option value="entradas-dulces">Entradas Dulces</option>
+                    <option value="entradas-saladas">Entradas Saladas</option>
+                    <option value="bebidas-calientes">Bebidas Calientes</option>
+                    <option value="bebidas-frias">Bebidas Frías</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Nombre del Producto</label>
+                <input type="text" id="newProductName" placeholder="Ej: Crepa Tentación de Fresa">
+            </div>
+            <div class="input-group">
+                <label>Precio de Venta ($ USD)</label>
+                <input type="number" step="0.01" id="newProductPrice" placeholder="Ej: 4.50">
+            </div>
+            <div class="input-group">
+                <label>URL de la Imagen</label>
+                <input type="text" id="newProductImg" placeholder="https://ejemplo.com/foto.jpg">
+            </div>
+            <div class="input-group">
+                <label>Descripción Corta / Ingredientes</label>
+                <textarea id="newProductDescription" placeholder="Detalles del producto que verá el cliente..."></textarea>
+            </div>
+            <button class="btn1" style="width: 100%; border-radius: 12px; padding: 14px;" onclick="guardarNuevoProductoMenu()">Publicar en el Menú</button>
+        </div>
+
+        <!-- SECCIÓN: EDITAR CATEGORÍAS -->
+        <div id="adminPanelEditar" style="display: none;">
+            <h3 style="color: #b8860b; margin-bottom: 10px;">Modificar Elementos de la Aplicación</h3>
+            <p style="color: #555; font-size: 13px; margin-bottom: 15px;">Selecciona cualquier categoría para alterar o corregir los nombres, fotos y precios en tiempo real.</p>
+            
+            <div class="input-group">
+                <label>Categoría a Modificar</label>
+                <select id="editCategorySelector" onchange="cargarOpcionesParaEditar()">
+                    <optgroup label="🛠️ Personalización (Arma tu Crepa)">
+                        <option value="bases">Bases Dulces (Paso 1)</option>
+                        <option value="toppingsRegular">Toppings Regulares ($0.75)</option>
+                        <option value="toppingsPremium">Toppings Premium ($0.99)</option>
+                        <option value="masas">Tipos de Masas (Paso 3)</option>
+                        <option value="extras">Ingredientes Extras</option>
+                    </optgroup>
+                    <optgroup label="🍕 Categorías del Menú">
+                        <option value="crepas-dulces">Crepas Dulces</option>
+                        <option value="crepas-saladas">Crepas Saladas</option>
+                        <option value="paninis">Paninis</option>
+                        <option value="hamburguesas">Hamburguesas</option>
+                        <option value="entradas-dulces">Entradas Dulces</option>
+                        <option value="entradas-saladas">Entradas Saladas</option>
+                        <option value="bebidas-calientes">Bebidas Calientes</option>
+                        <option value="bebidas-frias">Bebidas Frías</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div id="listaOpcionesEditablesContainer" style="max-height: 320px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 12px; padding: 15px; background: #f9f9f9;">
+                <!-- Cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
